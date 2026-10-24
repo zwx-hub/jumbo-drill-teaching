@@ -1,0 +1,14 @@
+# 学习行为数据（服务端运行时生成）
+learning_state.json
+learning_state.json.tmp
+
+# Python
+__pycache__/
+*.pyc
+
+# 自检截图产物（不纳入版本库）
+_shots/
+
+# 本地日志
+_srv_out.log
+_srv_err.log
