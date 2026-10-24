@@ -17,6 +17,9 @@
       GET  /api/knowledge     知识要点（结构/原理/装配/维护）
       GET  /api/interactions  学习数据统计
       POST /api/interactions  上报一次学习行为 {action, partId?, ms?, ts?}
+      POST /api/chat          AI 教学助教：把对话转发到 DeepSeek API（Key 读取自
+                              同目录 deepseek_key.txt 或环境变量 DEEPSEEK_API_KEY，
+                              Key 只存在于服务端，不会下发到浏览器）
   · 学习行为持久化到 learning_state.json（部件点击排行 / 演示次数 / 学习时长）
   · 已开启 CORS：前端页面部署到 GitHub Pages 等静态站点后，仍可调用本服务上报数据
 纯 Python 标准库实现，无需安装任何第三方依赖。
@@ -25,6 +28,8 @@ import json
 import os
 import threading
 import time
+import urllib.error
+import urllib.request
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 
@@ -33,6 +38,79 @@ STATE_FILE = os.path.join(ROOT, "learning_state.json")
 HOST, PORT = "127.0.0.1", 8000
 START_TIME = time.time()
 LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# DeepSeek AI 教学助教（本地代理：浏览器 → /api/chat → DeepSeek）
+# Key 从 deepseek_key.txt（已加入 .gitignore，不会入库）或环境变量读取
+# ---------------------------------------------------------------------------
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MAX_TOKENS = 2048
+KEY_FILE = os.path.join(ROOT, "deepseek_key.txt")
+
+
+def deepseek_key():
+    """读取 DeepSeek API Key：优先环境变量，其次同目录 deepseek_key.txt。"""
+    key = (os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    if key:
+        return key
+    try:
+        with open(KEY_FILE, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
+def forward_chat(messages, model=None, max_tokens=DEEPSEEK_MAX_TOKENS):
+    """把 messages 转发到 DeepSeek，返回 (结果字典, 错误消息)。"""
+    key = deepseek_key()
+    if not key:
+        return None, ("未配置 DeepSeek API Key：请在 server.py 同目录创建 "
+                      "deepseek_key.txt 并写入你的 Key（该文件已被 .gitignore 忽略，"
+                      "不会上传到 GitHub），或设置环境变量 DEEPSEEK_API_KEY。")
+    payload = json.dumps({
+        "model": model or DEEPSEEK_MODEL,
+        "messages": messages,
+        "max_tokens": int(max_tokens or DEEPSEEK_MAX_TOKENS),
+        "stream": False,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        DEEPSEEK_API_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + key,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        try:
+            reply = data["choices"][0]["message"]["content"]
+        except Exception:
+            reply = ""
+        return {"ok": True, "reply": reply, "model": data.get("model", model or DEEPSEEK_MODEL)}, None
+    except urllib.error.HTTPError as e:
+        err_code, err_msg = "", ""
+        try:
+            detail = json.loads(e.read().decode("utf-8") or "{}")
+            err = detail.get("error") or {}
+            err_msg = err.get("message") or ""
+            err_code = err.get("code") or ""
+        except Exception:
+            pass
+        if e.code == 401:
+            msg = "DeepSeek API Key 无效或未授权，请检查 deepseek_key.txt 中的 Key。"
+        elif e.code == 402:
+            msg = "DeepSeek 账户余额不足，请登录 DeepSeek 开放平台充值后重试。"
+        elif e.code == 429:
+            msg = "AI 请求过于频繁，请稍等片刻再试。"
+        else:
+            msg = "AI 服务暂时不可用（HTTP %d）%s" % (e.code, ("（" + err_msg + "）") if err_msg else "")
+        return {"ok": False, "error": msg, "code": err_code}, None
+    except Exception as e:
+        return {"ok": False, "error": "AI 服务连接失败（%s）" % e.__class__.__name__}, None
 
 # ---------------------------------------------------------------------------
 # 服务端权威数据（前端在服务端模式下以此为准；本地模式下使用内置副本）
@@ -278,6 +356,31 @@ class Handler(SimpleHTTPRequestHandler):
     # ---- POST ----
     def do_POST(self):
         path = urlparse(self.path).path
+        if path == "/api/chat":
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                body = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+            except Exception:
+                body = {}
+            messages = body.get("messages")
+            if not isinstance(messages, list) or not messages:
+                self._json({"ok": False, "error": "缺少 messages 参数"}, 400)
+                return
+            model = body.get("model") or DEEPSEEK_MODEL
+            max_tokens = body.get("max_tokens") or DEEPSEEK_MAX_TOKENS
+            try:
+                max_tokens = int(max_tokens)
+            except Exception:
+                max_tokens = DEEPSEEK_MAX_TOKENS
+            result, err = forward_chat(messages, model, max_tokens)
+            if err:
+                self._json({"ok": False, "error": err}, 503)
+                return
+            if not result.get("ok"):
+                self._json(result, 502)
+                return
+            self._json(result)
+            return
         if path != "/api/interactions":
             self._json({"ok": False, "error": "not found"}, 404)
             return

@@ -352,6 +352,84 @@ body.ready #workflow{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .65s forward
   .sp-bar i{animation:none;width:100%}
   #splash{transition:none}
 }
+
+/* ============ AI 教学助教（DeepSeek） ============ */
+#aiFab{
+  position:fixed;right:14px;bottom:80px;z-index:30;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:52px;height:52px;border-radius:16px;
+  background:linear-gradient(160deg,#1E262F,#151A20);
+  border:1px solid var(--line);color:var(--accent);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);
+  transition:border-color .18s,transform .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+#aiFab svg{width:22px;height:22px}
+#aiFab span{font-size:9px;letter-spacing:.04em;color:var(--muted)}
+#aiFab:hover{border-color:var(--accent);transform:translateY(-1px)}
+#aiFab.on{background:var(--accent);color:#1A1206;border-color:var(--accent)}
+#aiFab.on span{color:#1A1206}
+#aiChat{
+  position:fixed;right:14px;bottom:142px;z-index:30;
+  width:min(370px,calc(100vw - 24px));
+  height:min(560px,calc(100vh - 162px));
+  display:flex;flex-direction:column;
+  background:rgba(19,24,30,.98);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(10px) scale(.98);
+  transition:opacity .2s,transform .2s,visibility .2s;
+  overflow:hidden;
+}
+#aiChat.open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+.aic-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 14px 10px;border-bottom:1px solid var(--line);
+}
+.aic-eyebrow{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--accent);margin-bottom:3px}
+.aic-name{font-size:14px;font-weight:700;letter-spacing:.03em}
+.aic-tools{display:flex;gap:4px}
+.aic-tools button{
+  width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);
+  transition:background .15s,color .15s;
+}
+.aic-tools button:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.aic-tools svg{width:15px;height:15px}
+.aic-body{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px}
+.aic-body::-webkit-scrollbar{width:5px}
+.aic-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.aic-msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.aic-msg.user{align-self:flex-end;background:rgba(245,184,46,.16);border:1px solid rgba(245,184,46,.35);border-bottom-right-radius:4px}
+.aic-msg.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--line-soft);border-bottom-left-radius:4px}
+.aic-msg.err{align-self:flex-start;background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.3);color:#FFB4B4}
+.aic-msg .aic-role{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--dim);margin-bottom:4px}
+.aic-msg.user .aic-role{color:var(--accent)}
+.aic-typing{display:inline-flex;gap:4px;padding:4px 2px}
+.aic-typing i{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:aicBlink 1.2s infinite}
+.aic-typing i:nth-child(2){animation-delay:.2s}
+.aic-typing i:nth-child(3){animation-delay:.4s}
+@keyframes aicBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.aic-input{display:flex;align-items:flex-end;gap:8px;padding:10px 12px 8px;border-top:1px solid var(--line)}
+#aiInput{
+  flex:1;resize:none;overflow-y:hidden;background:var(--panel-solid);border:1px solid var(--line);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding:9px 11px;max-height:110px;
+}
+#aiInput:focus{outline:none;border-color:var(--accent)}
+#aiInput::placeholder{color:var(--dim)}
+#aiSend{
+  width:38px;height:38px;flex:none;border-radius:10px;
+  background:var(--accent);color:#1A1206;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s;
+}
+#aiSend:disabled{opacity:.4;cursor:default}
+#aiSend svg{width:17px;height:17px}
+.aic-foot{padding:0 14px 10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--dim);text-align:right}
+@media (max-width:640px){
+  #aiFab{right:12px;bottom:76px;width:50px;height:50px}
+  #aiChat{right:10px;left:10px;bottom:134px;width:auto;height:calc(100vh - 150px)}
+}
 </style>
 </head>
 <body>
@@ -464,6 +542,204 @@ body.ready #workflow{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .65s forward
   <div class="sp-bar"><i></i></div>
   <div class="sp-txt">正在加载 3D 教学模型…</div>
 </div>
+
+<!-- AI 教学助教（DeepSeek） -->
+<button class="hud" id="aiFab" role="button" tabindex="0" aria-label="打开 AI 教学助教" title="AI 教学助教">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <span>AI 助教</span>
+</button>
+<section class="hud" id="aiChat" aria-hidden="true" aria-label="AI 教学助教">
+  <div class="aic-head">
+    <div>
+      <span class="aic-eyebrow">JUMBO TEACH · DEEPSEEK</span>
+      <span class="aic-name">AI 教学助教</span>
+    </div>
+    <div class="aic-tools">
+      <button class="aic-clear" id="aiClear" title="清空对话" aria-label="清空对话">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+      </button>
+      <button class="aic-close" id="aiClose" aria-label="关闭 AI 助教">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="aic-body" id="aiMsgs"></div>
+  <div class="aic-input">
+    <textarea id="aiInput" rows="1" placeholder="问问凿岩台车的结构、参数或原理…（Enter 发送）"></textarea>
+    <button id="aiSend" aria-label="发送">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11.5 21 3l-8.5 18-2.5-7.5L3 11.5z"/></svg>
+    </button>
+  </div>
+  <div class="aic-foot" id="aiStatus"></div>
+</section>
+
+<script>
+/* ================= AI 教学助教（DeepSeek，双模式：本地 /api/chat · 静态云端代理） ================= */
+(function(){
+'use strict';
+/* ---- 配置 ---- */
+var AI_PROXY_URL = ''; /* 在线模式：部署 Cloudflare Worker 代理后填入，如 'https://xxx.workers.dev/chat'；本地模式留空即可 */
+var AI_MODEL = 'deepseek-chat';
+var AI_MAX_TOKENS = 2048;
+var AI_LS_KEY = 'jumbo_ai_chat_v1';
+var AI_MAX_HISTORY = 20;
+
+var fab = document.getElementById('aiFab');
+var panel = document.getElementById('aiChat');
+var msgsEl = document.getElementById('aiMsgs');
+var inputEl = document.getElementById('aiInput');
+var sendBtn = document.getElementById('aiSend');
+var statusEl = document.getElementById('aiStatus');
+var openFlag = false;
+var busy = false;
+var history = [];
+
+function loadHistory(){ try{ var h = JSON.parse(localStorage.getItem(AI_LS_KEY)); if(Array.isArray(h)) history = h.slice(-AI_MAX_HISTORY); }catch(e){ history = []; } }
+function saveHistory(){ try{ localStorage.setItem(AI_LS_KEY, JSON.stringify(history.slice(-AI_MAX_HISTORY))); }catch(e){} }
+
+function addMsg(role, text, cls){
+  var d = document.createElement('div');
+  d.className = 'aic-msg ' + (cls || role);
+  var r = document.createElement('span');
+  r.className = 'aic-role';
+  r.textContent = (role === 'user') ? '你' : 'AI 助教';
+  d.appendChild(r);
+  var t = document.createElement('span');
+  t.textContent = text;
+  d.appendChild(t);
+  msgsEl.appendChild(d);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+  return d;
+}
+function setStatus(t){ statusEl.textContent = t || ''; }
+function setBusy(b){ busy = b; sendBtn.disabled = b; }
+function backendMode(){ return (window.__JUMBO_API && window.__JUMBO_API.mode) ? window.__JUMBO_API.mode : 'local'; }
+
+function buildSystemPrompt(){
+  var ctx = (window.__JUMBO_API && window.__JUMBO_API.getContext) ? window.__JUMBO_API.getContext() : null;
+  var parts = (ctx && ctx.parts) ? ctx.parts : [];
+  var params = (ctx && ctx.params) ? ctx.params : {};
+  var knowledge = (ctx && ctx.knowledge) ? ctx.knowledge : {};
+  var lines = ['你是《三臂凿岩台车》交互教学站的 AI 助教，面向隧道施工机械学习者。'];
+  lines.push('回答要求：使用简体中文；简洁、准确、可适当分点；优先依据下方本站内置资料回答；资料未覆盖时按专业常识回答并注明；可建议用户在页面上点击对应部件查看 3D 细节。');
+  lines.push('');
+  lines.push('【部件清单】');
+  parts.forEach(function(p){ lines.push('- ' + (p.id || '') + '：' + (p.name || '') + (p.tag ? '（' + p.tag + '）' : '')); });
+  lines.push('');
+  lines.push('【技术参数】');
+  Object.keys(params).forEach(function(k){
+    var sec = params[k];
+    lines.push('◆ ' + (sec.title || k));
+    (sec.items || []).forEach(function(it){ lines.push('- ' + it[0] + '：' + it[1]); });
+    if(sec.note) lines.push('· ' + sec.note);
+  });
+  lines.push('');
+  lines.push('【知识要点】');
+  Object.keys(knowledge).forEach(function(k){
+    var sec = knowledge[k];
+    lines.push('◆ ' + (sec.title || k));
+    (sec.points || []).forEach(function(pt){ lines.push('- ' + pt); });
+  });
+  return lines.join('\n');
+}
+function chatEndpoint(){
+  if(backendMode() === 'server') return '/api/chat';
+  if(AI_PROXY_URL) return AI_PROXY_URL;
+  return '';
+}
+function sendQuestion(text){
+  var messages = [{role:'system', content: buildSystemPrompt()}]
+    .concat(history)
+    .concat([{role:'user', content: text}]);
+  var url = chatEndpoint();
+  if(!url){
+    addMsg('bot', '当前环境未配置 AI 通道：\n· 本地模式：运行 start_server.bat，并在 server.py 同目录放好 deepseek_key.txt 后可用；\n· 在线模式：部署 Cloudflare Worker 代理后填入页面顶部的 AI_PROXY_URL。\n详见 README「AI 教学助教」一节。', 'err');
+    return;
+  }
+  setBusy(true);
+  setStatus('AI 正在思考…');
+  fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ messages: messages, model: AI_MODEL, max_tokens: AI_MAX_TOKENS })
+  }).then(function(r){
+    return r.json().then(function(j){ return {ok: r.ok, j: j}; });
+  }).then(function(res){
+    if(res.j && res.j.ok && typeof res.j.reply === 'string'){
+      history.push({role:'user', content:text});
+      history.push({role:'assistant', content:res.j.reply});
+      saveHistory();
+      addMsg('bot', res.j.reply);
+    } else {
+      addMsg('bot', (res.j && res.j.error) ? res.j.error : 'AI 服务返回异常，请稍后再试。', 'err');
+    }
+    setStatus('');
+    setBusy(false);
+  }).catch(function(){
+    addMsg('bot', '网络请求失败：无法连接 AI 服务，请检查服务是否启动或云端代理是否可用。', 'err');
+    setStatus('');
+    setBusy(false);
+  });
+}
+function renderHistory(){
+  msgsEl.innerHTML = '';
+  if(!history.length){
+    addMsg('bot', '你好，我是本教学站的 AI 助教。可以问我三臂凿岩台车的部件结构、技术参数、工作原理、装配与维护要点，例如「凿岩机 HC95SA 的冲击频率是多少？」');
+    return;
+  }
+  history.forEach(function(m){
+    if(m.role === 'user') addMsg('user', m.content);
+    else if(m.role === 'assistant') addMsg('bot', m.content);
+  });
+}
+function openChat(){
+  openFlag = true;
+  panel.classList.add('open');
+  fab.classList.add('on');
+  panel.setAttribute('aria-hidden','false');
+  loadHistory();
+  renderHistory();
+  setStatus(backendMode() === 'server' ? '服务端模式 · DeepSeek 已连接' : (AI_PROXY_URL ? '在线模式 · 云端代理转发' : '未配置 AI 通道'));
+  setTimeout(function(){ inputEl.focus(); }, 60);
+}
+function closeChat(){
+  openFlag = false;
+  panel.classList.remove('open');
+  fab.classList.remove('on');
+  panel.setAttribute('aria-hidden','true');
+}
+function submit(){
+  var text = inputEl.value.trim();
+  if(!text || busy) return;
+  inputEl.value = '';
+  inputEl.style.height = '';
+  addMsg('user', text);
+  sendQuestion(text);
+}
+
+fab.addEventListener('click', function(){ openFlag ? closeChat() : openChat(); });
+fab.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openFlag ? closeChat() : openChat(); }
+});
+document.getElementById('aiClose').addEventListener('click', closeChat);
+document.getElementById('aiClear').addEventListener('click', function(){
+  history = [];
+  saveHistory();
+  renderHistory();
+});
+sendBtn.addEventListener('click', submit);
+inputEl.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); submit(); }
+});
+inputEl.addEventListener('input', function(){
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && openFlag) closeChat();
+});
+})();
+</script>
 
 <script src="https://fastly.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
@@ -1561,6 +1837,12 @@ try{
   hideSplash();
   animate();
   probeBackend();
+  window.__JUMBO_API = {
+    get mode(){ return BACKEND.mode; },
+    getContext: function(){
+      return { parts: PARTS || [], params: PARAMS || {}, knowledge: KNOWLEDGE || {} };
+    }
+  };
   window.__JUMBO_READY = true;
 }catch(err){
   console.error(err);
