@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23005BAC'/%3E%3Ctext x='32' y='43' font-size='26' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ECR%3C/text%3E%3C/svg%3E">
     <title>三臂凿岩台车教学交互式智能体平台</title>
+    <meta name="description" content="三臂凿岩台车教学交互式智能体平台：面向隧道施工机械教学实训的数字化平台，内置三维模拟实操（3D）、AI 虚拟导师、在线考核评估、学情监控与教员后台，覆盖 DJ3G 钻臂、HC95SA 凿岩机结构与操作安全规范，学练考一体化。">
+    <meta name="keywords" content="三臂凿岩台车,凿岩台车,隧道施工机械,凿岩台车教学,凿岩台车仿真,凿岩台车模拟实操,DJ3G钻臂,HC95SA凿岩机,钻爆法,隧道工程实训,虚拟仿真教学平台">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="三臂凿岩台车教学智能体项目组">
+    <meta name="application-name" content="三臂凿岩台车教学交互式智能体平台">
+    <link rel="canonical" href="https://zwx-hub.github.io/jumbo-drill-teaching/">
+    <!-- Open Graph（微信 / Edge 分享卡片） -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="三臂凿岩台车教学交互式智能体平台">
+    <meta property="og:title" content="三臂凿岩台车教学交互式智能体平台">
+    <meta property="og:description" content="三维模拟实操 + AI 虚拟导师 + 在线考核评估，学练考一体化的凿岩台车数字教学实训平台。">
+    <meta property="og:url" content="https://zwx-hub.github.io/jumbo-drill-teaching/">
+    <meta property="og:image" content="https://zwx-hub.github.io/jumbo-drill-teaching/assets/hero.jpg">
+    <meta property="og:locale" content="zh_CN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="三臂凿岩台车教学交互式智能体平台">
+    <meta name="twitter:description" content="三维模拟实操 + AI 虚拟导师 + 在线考核评估，学练考一体化的凿岩台车数字教学实训平台。">
+    <meta name="twitter:image" content="https://zwx-hub.github.io/jumbo-drill-teaching/assets/hero.jpg">
+    <!-- 结构化数据（Bing / 搜索引擎理解站点） -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "三臂凿岩台车教学交互式智能体平台",
+      "alternateName": "Three-Boom Drilling Jumbo Interactive Teaching Agent Platform",
+      "url": "https://zwx-hub.github.io/jumbo-drill-teaching/",
+      "description": "面向隧道施工机械教学实训的数字化平台：三维模拟实操、AI 虚拟导师、在线考核评估、学情监控与教员后台，学练考一体化。",
+      "inLanguage": "zh-CN",
+      "publisher": {
+        "@type": "Organization",
+        "name": "三臂凿岩台车教学智能体项目组"
+      }
+    }
+    </script>
     <style>
         /* ================= 基础重置 ================= */
         * {
@@ -348,7 +382,7 @@
             line-height: 1.8;
         }
 
-        /* ================= 首页入口（学员入口统一） ================= */
+        /* ================= 首页入口卡片（学员 / 教员 + 六大模块 · 2行×4列 方形卡片） ================= */
         .home-hero {
             flex: 1;
             display: flex;
@@ -361,34 +395,60 @@
         }
         .home-hero h2 { color: #005BAC; font-size: 34px; margin-bottom: 14px; letter-spacing: 1px; }
         .home-hero p { color: #5a6b7f; font-size: 16px; margin-bottom: 36px; }
-        .hero-entries { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
-        .hero-entry {
-            display: flex; align-items: center; gap: 16px;
-            background: #fff; border-radius: 12px; padding: 20px 30px;
-            box-shadow: 0 6px 20px rgba(0,61,121,0.12); cursor: pointer;
-            border: 1px solid #e2ebf5; transition: all .25s; min-width: 320px;
-        }
-        .hero-entry:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,61,121,0.2); border-color: #005BAC; }
-        .hero-entry-icon {
-            width: 52px; height: 52px; border-radius: 50%; background: #005BAC; color: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;
-        }
-        .hero-entry-icon.alt { background: #e6872e; }
-        .hero-entry-txt { text-align: left; }
-        .hero-entry-txt b { display: block; font-size: 18px; color: #003D79; margin-bottom: 4px; }
-        .hero-entry-txt span { font-size: 13px; color: #6b7d90; }
+        /* 2 行 × 4 列 · 方形卡片 */
         .home-cards {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
             max-width: 1200px; width: 92%; margin: 10px auto 70px;
         }
         .home-card {
-            background: #fff; border-radius: 12px; padding: 26px 24px; cursor: pointer;
+            aspect-ratio: 1 / 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            padding: 22px 18px;
+            background: #fff; border-radius: 14px; cursor: pointer;
             border: 1px solid #e6eef7; box-shadow: 0 3px 12px rgba(0,61,121,0.06);
-            transition: all .25s;
+            transition: transform .22s, box-shadow .22s, border-color .22s;
         }
-        .home-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,61,121,0.15); }
+        .home-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,61,121,0.16); border-color: #005BAC; }
+        .hc-icon {
+            width: 62px; height: 62px; border-radius: 50%;
+            background: #e8f2ff; color: #005BAC;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 800; margin-bottom: 14px; flex-shrink: 0;
+        }
         .home-card h3 { color: #005BAC; font-size: 18px; margin-bottom: 8px; }
         .home-card p { color: #6b7d90; font-size: 13px; line-height: 1.7; text-indent: 0; }
+        /* 学员 / 教员入口卡（品牌色实底） */
+        .home-card.entry {
+            border: 2px solid #005BAC;
+            background: linear-gradient(165deg, #0068c9 0%, #005BAC 55%, #003D79 100%);
+            box-shadow: 0 8px 22px rgba(0,91,172,0.28);
+        }
+        .home-card.entry:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 14px 30px rgba(0,91,172,0.38); border-color: #0068c9; }
+        .home-card.entry .hc-icon { background: rgba(255,255,255,0.18); color: #fff; }
+        .home-card.entry h3 { color: #fff; font-size: 20px; }
+        .home-card.entry p { color: rgba(255,255,255,0.88); }
+        .home-card.entry .hc-go {
+            display: inline-block; margin-top: 10px; padding: 7px 20px;
+            background: #fff; color: #005BAC; border-radius: 999px;
+            font-size: 13px; font-weight: 700;
+        }
+        .home-card.entry.teacher { border-color: #e6872e; background: linear-gradient(165deg, #f09535 0%, #e6872e 55%, #c96a17 100%); box-shadow: 0 8px 22px rgba(230,135,46,0.28); }
+        .home-card.entry.teacher:hover { box-shadow: 0 14px 30px rgba(230,135,46,0.38); border-color: #f09535; }
+        .home-card.entry.teacher .hc-go { color: #c96a17; }
+        /* 窄屏：2 列保持方形 */
+        @media (max-width: 1024px) {
+            .home-cards { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+        @media (max-width: 520px) {
+            .home-cards { gap: 12px; }
+            .hc-icon { width: 52px; height: 52px; font-size: 20px; }
+            .home-card h3 { font-size: 16px; }
+            .home-card p { font-size: 12px; }
+            .home-card.entry .hc-go { padding: 6px 16px; font-size: 12px; }
+        }
 
         /* ================= 考核评估 ================= */
         .assess-id-form { background: #f5f9fd; border: 1px dashed #b8d2ea; border-radius: 10px; padding: 28px; }
@@ -816,34 +876,41 @@
             <div class="hero-banner">
                 <img src="./assets/hero.jpg" alt="DJ3G 三臂凿岩台车 · 机型教学图（D-Drilling 钻孔凿岩 / J-Jumbo 台车 / 3-三根钻臂 / G-机型代号）" loading="eager">
             </div>
-            <div class="hero-entries">
-                <div class="hero-entry" onclick="enterPortal('student'); return false;">
-                    <div class="hero-entry-icon">学</div>
-                    <div class="hero-entry-txt"><b>学员入口</b><span>统一入口：确认书 → 学习 / 模拟实操 / 考核评估</span></div>
-                </div>
-                <div class="hero-entry" onclick="enterPortal('teacher'); return false;">
-                    <div class="hero-entry-icon alt">教</div>
-                    <div class="hero-entry-txt"><b>教员入口</b><span>统一入口：确认书 → 学情监控 / 个性化报告生成</span></div>
-                </div>
-            </div>
         </div>
+        <!-- 首页入口卡片：2 行 × 4 列，方形卡片（学员 / 教员入口已接入） -->
         <div class="home-cards">
+            <div class="home-card entry" onclick="enterPortal('student'); return false;">
+                <div class="hc-icon">学</div>
+                <h3>学员入口</h3><p>统一入口：确认书 → 学习 / 模拟实操 / 考核评估</p>
+                <span class="hc-go">进入学习 →</span>
+            </div>
+            <div class="home-card entry teacher" onclick="enterPortal('teacher'); return false;">
+                <div class="hc-icon">教</div>
+                <h3>教员入口</h3><p>统一入口：确认书 → 学情监控 / 个性化报告生成</p>
+                <span class="hc-go">进入后台 →</span>
+            </div>
             <div class="home-card" onclick="switchPage('overview', document.querySelectorAll('.nav-item')[1]); return false;">
+                <div class="hc-icon">概</div>
                 <h3>平台概况</h3><p>平台介绍、研发团队、荣誉与发展历程。</p>
             </div>
             <div class="home-card" onclick="switchPage('teaching', document.querySelectorAll('.nav-item')[2]); return false;">
+                <div class="hc-icon">课</div>
                 <h3>教学中心</h3><p>课程体系、设备认知、液压电气、安全规程与故障排查。</p>
             </div>
             <div class="home-card" onclick="switchPage('simulation', document.querySelectorAll('.nav-item')[3]); return false;">
+                <div class="hc-icon">3D</div>
                 <h3>模拟操作</h3><p>进入三维模拟实操（3D），还原真实掌子面作业场景。</p>
             </div>
             <div class="home-card" onclick="switchPage('assessment', document.querySelectorAll('.nav-item')[4]); return false;">
+                <div class="hc-icon">考</div>
                 <h3>考核评估</h3><p>实操模拟考核 + 正式考核，成绩实时接入后台。</p>
             </div>
             <div class="home-card" onclick="switchPage('ai', document.querySelectorAll('.nav-item')[5]); return false;">
+                <div class="hc-icon">AI</div>
                 <h3>智能助手</h3><p>AI 虚拟导师 7×24 小时实时答疑与纠错。</p>
             </div>
             <div class="home-card" onclick="switchPage('docs', document.querySelectorAll('.nav-item')[6]); return false;">
+                <div class="hc-icon">文</div>
                 <h3>技术文档</h3><p>操作保养手册、液压电气图集与前沿技术论文。</p>
             </div>
         </div>

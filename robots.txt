@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zwx-hub.github.io/jumbo-drill-teaching/sitemap.xml
