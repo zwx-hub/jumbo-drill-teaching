@@ -85,7 +85,21 @@
         .report-loading { color: #005BAC; font-size: 14px; padding: 30px 0; text-align: center; }
 
         .footer-note { text-align: center; color: #8a99a8; font-size: 12px; padding: 20px 0 30px; }
-        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .t-cards { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ============ 学情图表区（2+1 网格，不堆叠） ============ */
+        .charts-panel { background: #fff; border-radius: 12px; box-shadow: 0 3px 14px rgba(0,61,121,0.07); padding: 24px 26px; border: 1px solid #e6eef7; margin-top: 24px; }
+        .charts-panel .panel-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .charts-panel .panel-title .tag { font-size: 11px; color: #6b7d90; font-weight: normal; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 6px; }
+        .chart-sub { font-size: 13px; color: #003D79; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .chart-sub .tag { font-size: 11px; color: #6b7d90; font-weight: normal; }
+        .chart-box { width: 100%; height: 280px; background: #fbfdff; border: 1px solid #eef3f8; border-radius: 10px; }
+        .chart-box.tall { height: 320px; }
+        .chart-wide { grid-column: 1 / -1; }
+        tbody tr.selectable { cursor: pointer; }
+        tbody tr.selectable:hover td { background: #eef6ff; }
+        tbody tr.on td { background: #e3efff; }
+        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .t-cards { grid-template-columns: repeat(2, 1fr); } .chart-grid { grid-template-columns: 1fr; } }
         @media print {
             .topbar, .mode-banner, .report-btns, .ai-cfg, .toolbar, .footer-note, .panel.ctrl { display: none !important; }
             body { background: #fff; }
@@ -171,7 +185,31 @@
         </div>
     </div>
 
+    <!-- ===== 学情图表区：趋势图 + 班级对比 并排，雷达图单独整行 ===== -->
+    <div class="charts-panel">
+        <div class="panel-title">学情图表 · 实时刷新
+            <span class="tag">数据随上方列表 / 记录同步更新；静态演示模式可开启实时数据流</span>
+            <button class="btn-ghost" id="liveBtn" onclick="toggleLiveStream()">开启实时演示数据流</button>
+        </div>
+        <div class="chart-grid">
+            <div>
+                <div class="chart-sub">考核得分趋势<span class="tag">最近 20 条 · 全部类型</span></div>
+                <div class="chart-box" id="chartTrend"></div>
+            </div>
+            <div>
+                <div class="chart-sub">班级对比<span class="tag">平均分 / 考核人次</span></div>
+                <div class="chart-box" id="chartClass"></div>
+            </div>
+            <div class="chart-wide">
+                <div class="chart-sub">个人能力雷达<span class="tag" id="radarHint">点击学员列表行切换</span></div>
+                <div class="chart-box tall" id="chartRadar"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="footer-note">版权所有：三臂凿岩台车教学智能体项目组 · 开发号：20261023</div>
+
+    <script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 
     <script>
         // ==================== 数据通道 ====================
@@ -284,11 +322,13 @@
             ].map(function(c){ return '<div class="t-card"><div class="t-num">'+c.v+'</div><div class="t-label">'+c.k+'</div></div>'; }).join('');
 
             var st = allData.students;
+            var cur = currentRadarName || '';
             document.getElementById('studentTableWrap').innerHTML = st.length
                 ? '<table><thead><tr><th>姓名</th><th>班级</th><th>考核次数</th><th>平均分</th></tr></thead><tbody>' + st.map(function(u){
                     var recs = allData.assessments.filter(function(x){ return x.name === u.name; });
                     var avg = recs.length ? Math.round(recs.reduce(function(s,x){ return s + (x.score||0); }, 0) / recs.length) : 0;
-                    return '<tr><td>'+u.name+(recs[0]&&recs[0]._demo?' <span style="color:#c0392b;">(示例)</span>':'')+'</td><td>'+(u.cls||'-')+'</td><td>'+recs.length+'</td><td>'+avg+'</td></tr>';
+                    var on = u.name === cur ? ' on' : '';
+                    return '<tr class="selectable'+on+'" data-name="'+u.name+'" onclick="pickRadarStudent(\''+u.name+'\')"><td>'+u.name+(recs[0]&&recs[0]._demo?' <span style="color:#c0392b;">(示例)</span>':'')+'</td><td>'+(u.cls||'-')+'</td><td>'+recs.length+'</td><td>'+avg+'</td></tr>';
                 }).join('') + '</tbody></table>'
                 : '<p class="empty-tip">暂无学员数据。</p>';
 
@@ -308,6 +348,124 @@
             st.forEach(function(u){ if (u.cls && classes.indexOf(u.cls) < 0) classes.push(u.cls); });
             var selC = document.getElementById('classTarget');
             selC.innerHTML = '<option value="__all__">全部班级</option>' + classes.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+            renderCharts();
+        }
+
+        // ==================== 学情图表（ECharts · 2+1 网格） ====================
+        var charts = {};
+        var currentRadarName = '';
+        function chartInit(id, opt){ if (!charts[id]) { charts[id] = echarts.init(document.getElementById(id)); } charts[id].setOption(opt, true); }
+        function avgOf(arr){ return arr.length ? Math.round(arr.reduce(function(s,x){ return s + (x.score||0); }, 0) / arr.length) : 0; }
+        function renderCharts(){
+            if (!window.echarts) return;
+            var list = allData.assessments.slice().sort(function(a,b){ return (a.ts||0) - (b.ts||0); });
+            // 1) 考核得分趋势：最近 20 条
+            var n = list.slice(-20);
+            var fmtDT = function(x){ var d = new Date(x.ts || Date.now()); return String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+            chartInit('chartTrend', {
+                backgroundColor:'transparent',
+                grid:{ left:44, right:20, top:36, bottom:28 },
+                tooltip:{ trigger:'axis', confine:true },
+                xAxis:{ type:'category', data:n.map(fmtDT), axisLabel:{ fontSize:10, color:'#5a6b7f', interval:2 } },
+                yAxis:{ type:'value', min:40, max:100, axisLabel:{ fontSize:10, color:'#5a6b7f' }, splitLine:{ lineStyle:{ color:'#eef3f8' } } },
+                series:[{
+                    type:'line', name:'考核得分', smooth:true, symbolSize:5,
+                    data:n.map(function(x){ return x.score; }),
+                    lineStyle:{ width:2.5, color:'#005BAC' },
+                    itemStyle:{ color:'#005BAC' },
+                    areaStyle:{ color:{ type:'linear', x:0, y:0, x2:0, y2:1, colorStops:[{offset:0,color:'rgba(0,91,172,.25)'},{offset:1,color:'rgba(0,91,172,.02)'}] } },
+                    markLine:{ silent:true, symbol:'none', data:[{ yAxis: avgOf(list), lineStyle:{ color:'#e6872e', type:'dashed', width:1 }, label:{ show:true, formatter:'均值 '+avgOf(list), fontSize:10, color:'#a16207' } }] }
+                }]
+            });
+            // 2) 班级对比：平均分 / 考核人次
+            var clsMap = {};
+            list.forEach(function(x){ if (x.cls) { clsMap[x.cls] = clsMap[x.cls] || []; clsMap[x.cls].push(x.score||0); } });
+            var clsNames = Object.keys(clsMap);
+            chartInit('chartClass', {
+                backgroundColor:'transparent',
+                grid:{ left:44, right:20, top:36, bottom:28 },
+                tooltip:{ trigger:'axis', confine:true },
+                legend:{ top:2, right:8, itemWidth:12, itemHeight:8, textStyle:{ fontSize:10, color:'#5a6b7f' } },
+                xAxis:{ type:'category', data:clsNames, axisLabel:{ fontSize:10.5, color:'#5a6b7f', interval:0 } },
+                yAxis:{ type:'value', min:0, max:100, axisLabel:{ fontSize:10, color:'#5a6b7f' }, splitLine:{ lineStyle:{ color:'#eef3f8' } } },
+                series:[
+                    { name:'班级平均分', type:'bar', barWidth:24, data:clsNames.map(function(c){ return Math.round(clsMap[c].reduce(function(a,b){return a+b;},0)/clsMap[c].length); }), itemStyle:{ borderRadius:[5,5,0,0], color:'#005BAC' }, label:{ show:true, position:'top', fontSize:11, fontWeight:700, color:'#003D79' } },
+                    { name:'考核人次', type:'bar', barWidth:24, data:clsNames.map(function(c){ return clsMap[c].length; }), itemStyle:{ borderRadius:[5,5,0,0], color:'#38bdf8' }, label:{ show:true, position:'top', fontSize:11, fontWeight:700, color:'#003D79' } }
+                ]
+            });
+            // 3) 个人能力雷达：选中学员 vs 班级均值
+            renderRadar();
+        }
+        function renderRadar(){
+            if (!window.echarts) return;
+            var list = allData.assessments;
+            var stu = currentRadarName || (allData.students[0] && allData.students[0].name);
+            if (!stu) return;
+            var dimMap = {};
+            list.forEach(function(x){ if (x.dims) Object.keys(x.dims).forEach(function(k){ dimMap[k] = 1; }); });
+            var dimNames = Object.keys(dimMap);
+            if (!dimNames.length) dimNames = ['理论'];
+            var me = list.filter(function(x){ return x.name === stu; });
+            var myVals = dimNames.map(function(k){
+                var arr = me.filter(function(x){ return x.dims && x.dims[k] != null; }).map(function(x){ return x.dims[k]; });
+                return arr.length ? Math.round(arr.reduce(function(a,b){ return a+b; }, 0) / arr.length) : 0;
+            });
+            var s = allData.students.filter(function(x){ return x.name === stu; })[0];
+            var cls = s && s.cls;
+            var clsRecs = cls ? list.filter(function(x){ return x.cls === cls; }) : [];
+            var clsVals = dimNames.map(function(k){
+                var arr = clsRecs.filter(function(x){ return x.dims && x.dims[k] != null; }).map(function(x){ return x.dims[k]; });
+                return arr.length ? Math.round(arr.reduce(function(a,b){ return a+b; }, 0) / arr.length) : 0;
+            });
+            var hint = document.getElementById('radarHint');
+            if (hint) hint.textContent = stu + ' · ' + dimNames.join(' / ');
+            chartInit('chartRadar', {
+                backgroundColor:'transparent',
+                tooltip:{ confine:true },
+                legend:{ top:0, right:6, itemWidth:12, itemHeight:8, textStyle:{ fontSize:10, color:'#5a6b7f' } },
+                radar:{
+                    indicator: dimNames.map(function(d){ return { name:d, max:100 }; }),
+                    radius:'64%', center:['50%','55%'],
+                    splitArea:{ areaStyle:{ color:['rgba(0,91,172,.04)','rgba(0,91,172,.08)'] } },
+                    axisLine:{ lineStyle:{ color:'#d8e6f7' } }, splitLine:{ lineStyle:{ color:'#d8e6f7' } },
+                    axisName:{ fontSize:11, color:'#3d5473' }
+                },
+                series:[{
+                    type:'radar',
+                    data:[
+                        { value:myVals, name:stu + ' · 个人', areaStyle:{ color:'rgba(0,91,172,.35)' }, lineStyle:{ color:'#005BAC', width:2 }, itemStyle:{ color:'#005BAC' } },
+                        { value:clsVals, name:(cls || '全部班级') + ' · 班级均值', areaStyle:{ color:'rgba(56,189,248,.18)' }, lineStyle:{ color:'#38bdf8', width:1.5, type:'dashed' }, itemStyle:{ color:'#38bdf8' } }
+                    ]
+                }]
+            });
+        }
+        function pickRadarStudent(name){
+            currentRadarName = name;
+            var rows = document.querySelectorAll('#studentTableWrap tr.selectable');
+            rows.forEach(function(r){ r.classList.toggle('on', r.getAttribute('data-name') === name); });
+            renderRadar();
+        }
+        // 实时演示数据流（静态演示模式）：每 6 秒推入一条示例考核记录
+        var liveTimer = null, liveOn = false;
+        function toggleLiveStream(){
+            if (backendMode === 'server') { showTip('服务端模式使用真实数据，无需开启演示数据流'); return; }
+            liveOn = !liveOn;
+            var btn = document.getElementById('liveBtn');
+            if (liveOn) {
+                btn.textContent = '暂停实时演示数据流';
+                liveTimer = setInterval(function(){
+                    var demo = buildDemoData();
+                    var rec = demo[Math.floor(Math.random() * demo.length)];
+                    rec.ts = Date.now(); rec._demo = true; rec._live = true;
+                    allData.assessments.unshift(rec);
+                    renderAll(summarize(allData.assessments));
+                }, 6000);
+                showTip('已开启实时演示数据流：每 6 秒推入一条示例考核记录');
+            } else {
+                btn.textContent = '开启实时演示数据流';
+                if (liveTimer) { clearInterval(liveTimer); liveTimer = null; }
+                showTip('已暂停实时演示数据流');
+            }
         }
 
         function fmtTime(s){ s = Math.max(0, Math.round(s || 0)); var m = Math.floor(s/60), ss = s%60; return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss; }

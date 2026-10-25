@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三臂凿岩台车动态演示平台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d6ae5'/%3E%3Cpath d='M14 44 L14 24 Q14 16 22 16 L46 16 Q52 16 52 22 L52 46 Q52 52 46 52 L24 52 Q16 52 14 44 Z' fill='none' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M30 52 L40 40' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* ============ 设计令牌 ============ */
+:root{
+  --deep:#0a2a5e; --deep2:#0d3a7e; --blue:#1d6ae5; --blue2:#3f86f0;
+  --ink:#0f2444; --ink2:#3d5473; --line:#dbe7f7; --card:#f5f9ff;
+  --bg:#eaf2fd; --white:#ffffff; --green:#22c55e; --green2:#16a34a;
+  --amber:#f59e0b; --red:#ef4444; --cyan:#38bdf8;
+  --shadow:0 6px 18px rgba(10,42,94,.10);
+  --radius:14px;
+  --mono:ui-monospace,"SF Mono",Consolas,"Courier New",monospace;
+  --sans:"Segoe UI","Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+[hidden]{display:none!important}
+
+/* ============ 顶部导航（双视图共用） ============ */
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,#081f47,#0d3a7e 60%,#123e8f);color:#fff;box-shadow:0 2px 10px rgba(4,16,40,.35)}
+.topbar-inner{max-width:1280px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:0 0 auto}
+.brand b{font-size:15px;letter-spacing:.5px;white-space:nowrap}
+.brand small{display:block;font-size:11px;opacity:.72;font-weight:400;letter-spacing:.2px;white-space:nowrap}
+.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;transition:.18s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,#1d6ae5,#3f86f0);color:#fff;box-shadow:0 4px 12px rgba(29,106,229,.35)}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.28)}
+.btn-ghost:hover{background:rgba(255,255,255,.22)}
+.btn-sm{padding:6px 11px;font-size:12px}
+
+/* ============ 数据通道状态条 ============ */
+.channel{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(4,22,52,.55);border:1px solid rgba(255,255,255,.16);font-size:12.5px;font-weight:600}
+.channel .dot{position:relative;width:11px;height:11px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.channel .dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--green);animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.55);opacity:.9}70%{transform:scale(1.25);opacity:0}100%{transform:scale(1.25);opacity:0}}
+.channel .mode{color:#bff3d0}
+.channel .via{opacity:.85;font-weight:400}
+.channel .live{margin-left:2px;display:inline-flex;align-items:center;gap:4px;font-size:11px;letter-spacing:.5px;color:#8fd9ff}
+.channel .live i{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:twinkle 1.1s steps(2) infinite}
+@keyframes twinkle{0%{opacity:.25}100%{opacity:1}}
+
+/* ============ 视图容器 ============ */
+.view{display:none;min-height:calc(100vh - 120px)}
+.view.active{display:block;animation:viewIn .45s ease}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ============ 首页 hero：整幅蓝色背景，台车线稿嵌入 ============ */
+.hero{position:relative;overflow:hidden;background:
+  radial-gradient(1200px 500px at 85% -10%,rgba(63,134,240,.55),transparent 60%),
+  radial-gradient(900px 420px at 8% 110%,rgba(56,189,248,.28),transparent 55%),
+  linear-gradient(160deg,#0a2a5e 0%,#0d3a7e 45%,#1453a8 100%);
+  color:#fff}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);background-size:26px 26px}
+.hero-inner{position:relative;max-width:1280px;margin:0 auto;padding:34px 20px 44px;z-index:1}
+.hero-head{text-align:center;margin-bottom:26px}
+.hero-head h1{font-size:clamp(22px,4vw,34px);font-weight:800;letter-spacing:1px;text-shadow:0 2px 14px rgba(4,16,40,.45)}
+.hero-head .en{font-size:clamp(11px,1.6vw,14px);letter-spacing:2.5px;opacity:.78;margin-top:6px;text-transform:uppercase}
+.hero-head .tag{margin-top:12px;display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.hero-head .tag span{font-size:12px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:22px;align-items:center;margin-top:18px}
+@media(min-width:900px){.hero-grid{grid-template-columns:430px 1fr;gap:34px}}
+
+/* DJ3G 型号拆解交互区 */
+.codebox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:var(--radius);padding:20px;backdrop-filter:blur(4px)}
+.codebox h2{font-size:15px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.codebox h2 .en{font-size:10.5px;opacity:.6;font-weight:400;letter-spacing:1px}
+.code-chars{display:flex;gap:12px;margin:16px 0 4px}
+.char{flex:1;aspect-ratio:1.55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:12px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.28);cursor:pointer;
+  transition:.2s;user-select:none;animation:charIn .5s both}
+.char b{font-size:clamp(26px,4vw,38px);line-height:1;font-family:var(--mono)}
+.char i{font-size:10px;font-style:normal;opacity:.72;letter-spacing:.3px}
+.char:nth-child(2){animation-delay:.12s}.char:nth-child(3){animation-delay:.24s}.char:nth-child(4){animation-delay:.36s}
+@keyframes charIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+.char:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.char.on{background:linear-gradient(135deg,#ffd166,#f59e0b);border-color:#ffd166;color:#1b2a12;box-shadow:0 6px 22px rgba(245,158,11,.45)}
+.char.on b{color:#111}
+.char.on i{opacity:.85;color:#233}
+.code-meaning{margin-top:14px;min-height:112px;background:rgba(4,22,52,.5);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:14px 16px;transition:.25s}
+.code-meaning .m-key{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
+.code-meaning .m-key small{font-family:var(--mono);font-size:11px;color:#8fd9ff;font-weight:600}
+.code-meaning .m-desc{font-size:13px;opacity:.88;margin-top:6px}
+.code-meaning .m-params{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.code-meaning .m-params span{font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(56,189,248,.16);border:1px solid rgba(56,189,248,.35);font-family:var(--mono)}
+
+/* 台车线稿 + 交互热点 */
+.rigbox{position:relative;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:var(--radius);padding:14px;min-height:340px}
+.rigbox h3{position:absolute;top:16px;left:20px;font-size:13px;font-weight:700;letter-spacing:.5px;z-index:3;display:flex;gap:8px;align-items:center}
+.rigbox h3 .en{font-size:10px;opacity:.6;font-weight:400}
+.rig-stage{position:relative;width:100%;height:auto;margin-top:34px}
+.rig-stage img{width:100%;height:auto;filter:brightness(0) invert(1);animation:rigFloat 5.5s ease-in-out infinite}
+@keyframes rigFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.rig-stage svg.hot{position:absolute;inset:0;width:100%;height:100%}
+.hot circle{fill:rgba(56,189,248,.28);stroke:#8fd9ff;stroke-width:2.5;cursor:pointer;transition:.2s}
+.hot circle.ghost{fill:none;stroke:transparent;stroke-width:9;cursor:pointer}
+.hot g:hover > circle:not(.ghost),.hot g.on > circle:not(.ghost){fill:rgba(245,158,11,.5);stroke:#ffd166;stroke-width:3.5}
+.hot .h-name{fill:#fff;font-size:12px;font-weight:700;text-anchor:middle;pointer-events:none}
+.rig-tip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(4,22,52,.85);border:1px solid rgba(255,255,255,.25);
+  border-radius:9px;padding:7px 12px;font-size:12px;white-space:nowrap;opacity:0;transition:.2s;pointer-events:none;z-index:4}
+.rig-tip.show{opacity:1}
+.rig-note{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rig-note span{font-size:10.5px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+
+/* 首页功能入口 */
+.entries{max-width:1280px;margin:-18px auto 0;padding:0 20px 30px;position:relative;z-index:2}
+.entries-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:768px){.entries-grid{grid-template-columns:repeat(4,1fr)}}
+.entry{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px 16px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.entry:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(10,42,94,.16);border-color:#bcd6f5}
+.entry::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--blue),var(--cyan))}
+.entry .ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f1fd,#d8e9fd);color:var(--blue)}
+.entry b{display:block;margin-top:10px;font-size:14.5px}
+.entry p{font-size:12px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.entry .go{margin-top:10px;font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.5px}
+
+/* 页脚 */
+.footer{background:linear-gradient(90deg,#081f47,#0d3a7e);color:#cfe0f5;text-align:center;padding:16px;font-size:12px}
+.footer b{color:#fff}
+
+/* ============ 教员后台视图 ============ */
+.t-page{max-width:1280px;margin:0 auto;padding:18px 16px 40px}
+.t-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(135deg,#0d3a7e,#1453a8);color:#fff;
+  border-radius:var(--radius);padding:13px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.t-banner .dot{position:relative;width:10px;height:10px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.t-banner .dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--green);animation:pulse 1.8s ease-out infinite}
+.t-banner b{font-size:14.5px}
+.t-banner .sub{font-size:12px;opacity:.85;margin-top:2px;width:100%}
+.t-banner .live{margin-left:auto;font-size:11px;color:#bff3d0;display:flex;align-items:center;gap:5px}
+.t-banner .live i{width:5px;height:5px;border-radius:50%;background:var(--green);animation:twinkle 1.1s steps(2) infinite}
+
+/* 学情概览卡片 */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px}
+@media(min-width:900px){.stats{grid-template-columns:repeat(6,1fr)}}
+.stat{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 14px 12px;position:relative;overflow:hidden}
+.stat .lab{font-size:12px;color:var(--ink2)}
+.stat .val{font-size:clamp(22px,3vw,30px);font-weight:800;color:var(--deep);line-height:1.2;margin-top:2px}
+.stat .val small{font-size:12px;color:var(--ink2);font-weight:600}
+.stat .trend{position:absolute;right:12px;top:12px;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px}
+.trend.up{color:var(--green2);background:#e5f9ec}
+.trend.down{color:var(--red);background:#fdeaea}
+.stat .spark{position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+
+/* 主内容两栏 */
+.t-cols{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+@media(min-width:1080px){.t-cols{grid-template-columns:1.25fr 1fr}}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#f5f9ff,#eef6ff)}
+.panel-head b{font-size:14px;color:var(--deep)}
+.panel-head .hint{margin-left:auto;font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:5px}
+.panel-body{padding:14px 16px}
+
+/* 表格 */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12.5px}
+thead th{background:#eef4fc;color:var(--ink2);font-weight:700;text-align:left;padding:8px 10px;white-space:nowrap;font-size:11.5px;letter-spacing:.3px}
+tbody td{padding:8px 10px;border-top:1px solid #eef3fb;white-space:nowrap}
+tbody tr:hover{background:#f6faff}
+tbody tr.row-link{cursor:pointer}
+tbody tr.row-link.on{background:#e3efff;box-shadow:inset 3px 0 0 var(--blue)}
+.badge{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:700}
+.badge.formal{background:#e3efff;color:var(--blue)}
+.badge.sim{background:#e5f9ec;color:var(--green2)}
+.badge.hot{background:#fef3d8;color:#a16207}
+.score{font-weight:800;font-family:var(--mono)}
+.score.ok{color:var(--green2)}.score.mid{color:#c27803}.score.low{color:var(--red)}
+.mini-pill{font-size:11px;padding:2px 8px;border-radius:8px;background:#eef4fc;color:var(--ink2);font-family:var(--mono)}
+
+/* 记录实时插入动画 */
+tbody tr.new{animation:newRow .9s ease}
+@keyframes newRow{0%{background:#fff7dd;transform:translateX(-8px)}60%{background:#fff7dd}100%{transform:none}}
+.live-tag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:var(--green2);background:#e5f9ec;padding:1px 7px;border-radius:999px;animation:twinkle 1.2s steps(2) infinite}
+
+/* 报告生成模块 */
+.report-mod{margin-bottom:12px;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fbfdff;transition:.2s}
+.report-mod:last-child{margin-bottom:0}
+.report-mod h4{font-size:13.5px;color:var(--deep);display:flex;align-items:center;gap:8px}
+.report-mod h4 svg{flex:0 0 auto;color:var(--blue)}
+.report-mod p{font-size:11.5px;color:var(--ink2);margin:4px 0 10px}
+.report-ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.report-ctrl select{flex:1;min-width:0;padding:8px 10px;border-radius:9px;border:1.5px solid #cfdff4;font-size:12.5px;color:var(--ink);background:#fff;font-family:inherit;min-height:38px}
+.report-ctrl .btn-gen{background:linear-gradient(135deg,#1d6ae5,#3f86f0);color:#fff;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:700;box-shadow:0 4px 10px rgba(29,106,229,.3);transition:.18s;min-height:38px}
+.report-ctrl .btn-gen:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.report-ctrl .btn-gen:disabled{opacity:.6;cursor:wait}
+.gen-bar{height:6px;border-radius:99px;background:#e6eefb;overflow:hidden;margin-top:10px;display:none}
+.gen-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#1d6ae5,#38bdf8);transition:width .18s linear;border-radius:99px}
+.report-out{margin-top:12px;background:#f2f7ff;border:1px dashed #bcd6f5;border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.8;display:none;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.report-out.show{display:block;animation:viewIn .35s ease}
+.report-out .r-title{font-weight:800;color:var(--deep);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.report-out .r-title .tag{font-size:10px;color:var(--blue);background:#e3efff;padding:2px 8px;border-radius:99px}
+.report-out .caret{display:inline-block;width:7px;color:var(--blue);animation:twinkle .8s steps(2) infinite}
+.report-out h5{margin:8px 0 3px;font-size:12.5px;color:var(--blue)}
+.report-out ul{margin:0 0 4px 18px}
+.report-out li{margin-bottom:2px}
+
+/* 图表 */
+.chart-box{width:100%;height:240px}
+.chart-box.tall{height:300px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-grid .chart-wide{grid-column:1 / -1}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#0d2f66;color:#fff;
+  padding:11px 18px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(4,16,40,.4);opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:86vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast b{color:#bff3d0}
+
+/* 部件信息卡 */
+.rig-info{position:absolute;right:12px;bottom:12px;width:min(280px,72%);background:rgba(4,22,52,.92);border:1px solid rgba(255,255,255,.25);
+  border-radius:12px;padding:12px 14px;font-size:12px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;z-index:5}
+.rig-info.show{opacity:1;transform:none}
+.rig-info b{font-size:13.5px;color:#ffd166}
+.rig-info .k{color:#8fd9ff;font-family:var(--mono);font-size:11px}
+.rig-info p{margin-top:5px;color:#eaf2fd;line-height:1.6}
+
+/* 无障碍：焦点可见 */
+button:focus-visible,.char:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<!-- ===== 视图：平台首页 ===== -->
+<div class="view active" id="view-home">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="rgba(255,255,255,.14)"/><path d="M14 44 L14 24 Q14 16 22 16 L46 16 Q52 16 52 22 L52 46 Q52 52 46 52 L24 52 Q16 52 14 44 Z" fill="none" stroke="#fff" stroke-width="5"/><path d="M30 52 L40 40" stroke="#8fd9ff" stroke-width="5" stroke-linecap="round"/></svg>
+        <div><b>三臂凿岩台车教学交互式智能体平台</b><small>Three-Boom Drilling Jumbo Teaching Agent Platform</small></div>
+      </div>
+      <div class="top-actions">
+        <div class="channel" title="数据通道实时状态">
+          <span class="dot"></span>
+          <span class="mode">动态演示模式</span>
+          <span class="via">· 已接入 tele agent 平台</span>
+          <span class="live"><i></i>数据流推送中</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="go('teacher')">进入教员后台</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-head">
+        <h1>三臂凿岩台车教学交互式AI智能体平台</h1>
+        <div class="en">Three-Boom Drilling Jumbo Interactive Teaching Agent Platform</div>
+        <div class="tag"><span>机型编码 DJ3G 认知</span><span>钻臂结构与作业分工</span><span>实时学情 · 智能报告</span></div>
+      </div>
+
+      <div class="hero-grid">
+        <!-- 左：DJ3G 型号拆解 -->
+        <div class="codebox">
+          <h2>机型代号拆解 <span class="en">DJ3G · 点击字母查看</span></h2>
+          <div class="code-chars" role="tablist" aria-label="机型代号">
+            <div class="char" tabindex="0" role="tab" data-code="D" onclick="pickCode('D')"><b>D</b><i>Drilling</i></div>
+            <div class="char" tabindex="0" role="tab" data-code="J" onclick="pickCode('J')"><b>J</b><i>Jumbo</i></div>
+            <div class="char" tabindex="0" role="tab" data-code="3" onclick="pickCode('3')"><b>3</b><i>3 根钻臂</i></div>
+            <div class="char" tabindex="0" role="tab" data-code="G" onclick="pickCode('G')"><b>G</b><i>机型代号</i></div>
+          </div>
+          <div class="code-meaning" id="codeMeaning">
+            <div class="m-key"><span id="mk">D</span><small id="mk-en">Drilling / 钻孔凿岩</small></div>
+            <div class="m-desc" id="md">台车以液压凿岩机驱动钻头，在隧道掌子面钻凿爆破孔，实现机械化钻孔作业。</div>
+            <div class="m-params" id="mp"><span>钻孔深度 4~6 m</span><span>推进力 20~23 kN</span><span>定位精度 ≤ ±1.8 cm</span></div>
+          </div>
+        </div>
+
+        <!-- 右：台车线稿嵌入蓝色背景 + 交互热点 -->
+        <div class="rigbox">
+          <h3>三臂凿岩台车结构 <span class="en">DJ3G · 点击部件</span></h3>
+          <div class="rig-stage" id="rigStage">
+            <img src="assets/jumbo-lineart-t.png" alt="三臂凿岩台车线稿结构示意" usemap="">
+            <svg class="hot" viewBox="0 0 1000 1000" aria-hidden="true">
+              <g data-part="arm1"><circle cx="700" cy="120" r="46"/><text class="h-name" x="700" y="125">钻臂①</text></g>
+              <g data-part="arm2"><circle cx="640" cy="250" r="46"/><text class="h-name" x="640" y="255">钻臂②</text></g>
+              <g data-part="arm3"><circle cx="585" cy="375" r="46"/><text class="h-name" x="585" y="380">钻臂③</text></g>
+              <g data-part="cab"><circle cx="265" cy="470" r="48"/><text class="h-name" x="265" y="475">驾驶室</text></g>
+              <g data-part="plat"><circle cx="405" cy="545" r="44"/><text class="h-name" x="405" y="550">作业平台</text></g>
+              <g data-part="wheel"><circle cx="350" cy="770" r="50"/><text class="h-name" x="350" y="775">行走机构</text></g>
+              <g data-part="reel"><circle cx="880" cy="690" r="44"/><text class="h-name" x="880" y="695">线缆卷筒</text></g>
+            </svg>
+            <div class="rig-tip" id="rigTip"></div>
+            <div class="rig-info" id="rigInfo">
+              <b id="riName">钻臂①</b> <span class="k" id="riCode">3</span>
+              <p id="riDesc">三根独立钻臂覆盖掌子面，按掏槽眼、辅助眼、周边眼分工布孔，实现全断面机械化钻孔。</p>
+            </div>
+          </div>
+          <div class="rig-note">
+            <span>D · 钻孔凿岩</span><span>J · 自行台车</span><span>3 · 三钻臂</span><span>G · 机型代号</span><span>参数为教学典型值</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="entries" aria-label="平台功能入口">
+    <div class="entries-grid">
+      <div class="entry" onclick="go('teacher')">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <b>教员后台</b><p>学情概览 · 考核记录 · 个性化报告</p><span class="go">进入学情分析 →</span>
+      </div>
+      <div class="entry" onclick="go('teacher')">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-7"/></svg></div>
+        <b>学情趋势分析</b><p>平均分走势 · 班级对比 · 实时刷新</p><span class="go">查看图表 →</span>
+      </div>
+      <div class="entry" onclick="go('teacher')">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+        <b>智能报告生成</b><p>个人报告 · 班级画像 · 教学质量</p><span class="go">AI 即时生成 →</span>
+      </div>
+      <div class="entry" onclick="go('teacher')">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <b>实时数据通道</b><p>已接入 tele agent 平台 · 绿灯在线</p><span class="go">数据流推送中 →</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">版权所有：三臂凿岩台车教学智能体项目组 · 开发号：20261025 · <b>动态演示模式</b>（已接入 tele agent 平台，绿灯在线）</footer>
+</div>
+
+<!-- ===== 视图：教员后台 · 学情分析与报告生成 ===== -->
+<div class="view" id="view-teacher">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="rgba(255,255,255,.14)"/><path d="M14 44 L14 24 Q14 16 22 16 L46 16 Q52 16 52 22 L52 46 Q52 52 46 52 L24 52 Q16 52 14 44 Z" fill="none" stroke="#fff" stroke-width="5"/><path d="M30 52 L40 40" stroke="#8fd9ff" stroke-width="5" stroke-linecap="round"/></svg>
+        <div><b>教员后台 · 学情分析与报告生成</b><small>三臂凿岩台车教学交互式智能体平台</small></div>
+      </div>
+      <div class="top-actions">
+        <div class="channel" title="数据通道实时状态">
+          <span class="dot"></span>
+          <span class="mode">动态演示模式</span>
+          <span class="via">· 已接入 tele agent 平台</span>
+          <span class="live"><i></i>数据流推送中</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="go('home')">返回平台首页</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('确认书流程已接入平台，可在平台首页经学员/教员入口进入《用户使用服务确认书》。','动态演示')">重新进入确认书</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="t-page">
+    <div class="t-banner">
+      <span class="dot"></span>
+      <div>
+        <b>数据通道：动态演示模式</b>
+        <div class="sub">已接入 tele agent 平台，绿灯在线 —— 考核记录、学情指标与报告由平台实时数据流推送；配置通道地址后切换为真实数据模式。</div>
+      </div>
+      <span class="live"><i></i>REAL-TIME · 每 6 秒推入新考核记录</span>
+    </div>
+
+    <!-- 学情概览 -->
+    <div class="stats" id="statsBox" aria-label="学情概览指标">
+      <div class="stat"><div class="lab">学员总数</div><div class="val num" id="sTotal">6</div><span class="trend up">±0</span><div class="spark"></div></div>
+      <div class="stat"><div class="lab">考核总人次</div><div class="val num" id="sRounds">15</div><span class="trend up">↑ 实时</span><div class="spark"></div></div>
+      <div class="stat"><div class="lab">整体平均分</div><div class="val num" id="sAvgAll">78</div><span class="trend up" id="sAvgAllT">↑</span><div class="spark"></div></div>
+      <div class="stat"><div class="lab">实操平均分</div><div class="val num" id="sAvgSim">79</div><span class="trend up" id="sAvgSimT">↑</span><div class="spark"></div></div>
+      <div class="stat"><div class="lab">正式考核平均分</div><div class="val num" id="sAvgFormal">78</div><span class="trend up" id="sAvgFormalT">↑</span><div class="spark"></div></div>
+      <div class="stat"><div class="lab">记录条数</div><div class="val num" id="sRecords">15</div><span class="trend up" id="sRecordsT">↑ 实时</span><div class="spark"></div></div>
+    </div>
+
+    <div class="t-cols">
+      <!-- 左栏：学员列表 + 考核记录 -->
+      <div class="t-col">
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-head"><b>学员列表</b><span class="hint"><span class="mini-pill">点击学员行 → 联动个人雷达</span></span></div>
+          <div class="panel-body tbl-wrap">
+            <table class="tbl" id="studentTbl" style="min-width:480px">
+              <colgroup><col style="width:26%"><col style="width:34%"><col style="width:20%"><col style="width:20%"></colgroup>
+              <thead><tr><th>姓名</th><th>班级</th><th>考核次数</th><th>平均分</th></tr></thead>
+              <tbody id="studentBody"><tr><td colspan="4" style="text-align:center;color:var(--ink2)">加载中…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><b>考核记录</b><span class="hint">最近 50 条 · <span class="live-tag"><i></i>LIVE 实时流入</span></span></div>
+          <div class="panel-body tbl-wrap">
+            <table class="tbl" id="recordTbl" style="min-width:560px">
+              <colgroup><col style="width:22%"><col style="width:14%"><col style="width:24%"><col style="width:14%"><col style="width:13%"><col style="width:13%"></colgroup>
+              <thead><tr><th>时间</th><th>姓名</th><th>班级</th><th>类型</th><th>得分</th><th>用时</th></tr></thead>
+              <tbody id="recordBody"><tr><td colspan="6" style="text-align:center;color:var(--ink2)">加载中…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右栏：报告生成 + 图表 -->
+      <div class="t-col">
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-head">
+            <b>个性化报告生成</b>
+            <span class="hint"><span class="live-tag"><i></i>后台智能体即时生成</span></span>
+          </div>
+          <div class="panel-body">
+            <div class="report-mod">
+              <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>个人学习报告</h4>
+              <p>针对指定学员的实操与理论考核数据，自动生成个人学习评价、薄弱环节与改进建议。</p>
+              <div class="report-ctrl">
+                <select id="repStudent" aria-label="选择学员"></select>
+                <button class="btn-gen" data-rep="personal" onclick="genReport('personal')">生成个人学习报告</button>
+              </div>
+              <div class="gen-bar" id="bar-personal"><i></i></div>
+              <div class="report-out" id="out-personal"></div>
+            </div>
+
+            <div class="report-mod">
+              <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>班级学情分析</h4>
+              <p>按班级汇总全部学员的考核表现，输出班级整体画像与教学建议。</p>
+              <div class="report-ctrl">
+                <select id="repClass" aria-label="选择班级">
+                  <option>全部班级</option>
+                  <option>隧道工程2024-1班</option>
+                  <option>隧道工程2024-2班</option>
+                </select>
+                <button class="btn-gen" data-rep="class" onclick="genReport('class')">生成班级学情分析</button>
+              </div>
+              <div class="gen-bar" id="bar-class"><i></i></div>
+              <div class="report-out" id="out-class"></div>
+            </div>
+
+            <div class="report-mod">
+              <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-7"/></svg>平台教学质量报告</h4>
+              <p>基于平台全部学习与考核数据，输出整体教学质量评估与优化建议。</p>
+              <div class="report-ctrl">
+                <button class="btn-gen" data-rep="quality" onclick="genReport('quality')" style="flex:1">生成教学质量报告</button>
+              </div>
+              <div class="gen-bar" id="bar-quality"><i></i></div>
+              <div class="report-out" id="out-quality"></div>
+            </div>
+
+            <div class="report-ctrl" style="margin-top:14px">
+              <input id="agentAddr" type="text" placeholder="tele agent 平台通道地址（可选）：填入后切换真实数据推送；留空则使用内置动态数据流" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1.5px solid #cfdff4;font-size:12px;min-height:38px;color:var(--ink)">
+              <button class="btn btn-primary btn-sm" onclick="bindAgent()">接入</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="panel">
+            <div class="panel-head"><b>学情图表 · 实时刷新</b><span class="hint"><span class="live-tag"><i></i>动态更新</span></span></div>
+            <div class="panel-body">
+              <div class="chart-box" id="chartTrend"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><b>班级对比 · 全部记录</b><span class="hint">均值 / 人次</span></div>
+            <div class="panel-body">
+              <div class="chart-box" id="chartClass"></div>
+            </div>
+          </div>
+
+          <div class="panel chart-wide">
+            <div class="panel-head"><b>个人能力雷达</b><span class="hint" id="radarHint">点击学员行选择</span></div>
+            <div class="panel-body">
+              <div class="chart-box tall" id="chartRadar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">版权所有：三臂凿岩台车教学智能体项目组 · 开发号：20261025 · <b>动态演示模式</b>（已接入 tele agent 平台，绿灯在线）</footer>
+</div>
+
+<!-- ===== 页脚占位：JS 入口 ===== -->
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script>
+/* ===== 全局状态 ===== */
+const $ = id => document.getElementById(id);
+let charts = {};
+let currentCode = 'D', currentPart = 'arm1', currentStudent = null;
+
+/* 机型代号资料 */
+const CODES = {
+  D: { en:'Drilling / 钻孔凿岩', desc:'台车以液压凿岩机驱动钻头，在隧道掌子面钻凿爆破孔，实现机械化钻孔作业。',
+       params:['钻孔深度 4~6 m','推进力 20~23 kN','定位精度 ≤ ±1.8 cm'] },
+  J: { en:'Jumbo / 自行式台车', desc:'自行式底盘搭载钻臂与作业平台，可快速转场至掌子面，是隧道机械化施工的核心装备。',
+       params:['自行式底盘','掌子面快速就位','配套供风供水供电'] },
+  '3': { en:'3 根钻臂 / 全断面覆盖', desc:'三根独立钻臂协同作业，按掏槽眼、辅助眼、周边眼分工布孔，覆盖全断面一次成形。',
+       params:['三臂独立作业','掏槽/辅助/周边眼分工','一次定位多孔钻进'] },
+  G: { en:'G / 机型代号', desc:'D·J·3·G 组合即机型代号，规范标注设备型号，便于教学识别与设备管理。',
+       params:['DJ3G = 三臂凿岩台车','国标型号标注','便于教学与设备台账管理'] }
+};
+
+/* 部件资料（与热点联动） */
+const PARTS = {
+  arm1:  { name:'钻臂①（顶）', code:'3', desc:'顶部钻臂负责掌子面高位掏槽眼钻孔，独立伸缩回转，覆盖拱顶区域。' },
+  arm2:  { name:'钻臂②（中）', code:'3', desc:'中部钻臂承担辅助眼钻孔，与另两臂分区协同，保证布孔间距均匀。' },
+  arm3:  { name:'钻臂③（底）', code:'3', desc:'底部钻臂负责周边眼钻孔，控制隧道轮廓成型精度，减少超挖欠挖。' },
+  cab:   { name:'驾驶室', code:'J', desc:'操作员控制台：车辆行走、钻臂定位与钻孔参数均在此集中操控。' },
+  plat:  { name:'作业平台', code:'J', desc:'平台用于高处检查与辅助作业，配合升降机构适应不同断面高度。' },
+  wheel: { name:'行走机构', code:'J', desc:'自行式底盘，大直径充气轮胎适应隧道湿滑路面，快速进出掌子面。' },
+  reel:  { name:'线缆卷筒', code:'J', desc:'尾部自动卷放电缆，为台车供配电，随车行走自动收放。' }
+};
+
+/* 初始学员（图1 示例数据） */
+let students = [
+  {name:'张明', cls:'隧道工程2024-1班', rounds:2, avg:81},
+  {name:'李雪', cls:'隧道工程2024-1班', rounds:3, avg:76},
+  {name:'王强', cls:'隧道工程2024-1班', rounds:2, avg:86},
+  {name:'刘洋', cls:'隧道工程2024-2班', rounds:3, avg:72},
+  {name:'赵磊', cls:'隧道工程2024-2班', rounds:2, avg:79},
+  {name:'陈晨', cls:'隧道工程2024-2班', rounds:3, avg:79}
+];
+
+/* 初始考核记录（图1 展示的最近记录） */
+let records = [
+  {t:'2026-10-20 05:57', name:'陈晨', cls:'隧道工程2024-2班', type:'正式', score:80, dur:'10:05'},
+  {t:'2026-10-20 11:57', name:'陈晨', cls:'隧道工程2024-2班', type:'实操模拟', score:63, dur:'09:05'},
+  {t:'2026-10-20 17:57', name:'陈晨', cls:'隧道工程2024-2班', type:'正式', score:95, dur:'08:05'},
+  {t:'2026-10-21 11:57', name:'赵磊', cls:'隧道工程2024-2班', type:'正式', score:60, dur:'08:20'},
+  {t:'2026-10-21 17:57', name:'赵磊', cls:'隧道工程2024-2班', type:'实操模拟', score:98, dur:'07:20'},
+  {t:'2026-10-22 05:57', name:'刘洋', cls:'隧道工程2024-2班', type:'正式', score:66, dur:'08:35'},
+  {t:'2026-10-22 11:57', name:'刘洋', cls:'隧道工程2024-2班', type:'实操模拟', score:70, dur:'07:35'},
+  {t:'2026-10-22 17:57', name:'刘洋', cls:'隧道工程2024-2班', type:'正式', score:81, dur:'06:35'},
+  {t:'2026-10-23 09:12', name:'张明', cls:'隧道工程2024-1班', type:'正式', score:80, dur:'07:52'},
+  {t:'2026-10-23 14:40', name:'张明', cls:'隧道工程2024-1班', type:'实操模拟', score:84, dur:'08:41'},
+  {t:'2026-10-24 10:20', name:'李雪', cls:'隧道工程2024-1班', type:'实操模拟', score:78, dur:'10:12'},
+  {t:'2026-10-24 15:05', name:'李雪', cls:'隧道工程2024-1班', type:'正式', score:75, dur:'09:28'},
+  {t:'2026-10-24 16:33', name:'李雪', cls:'隧道工程2024-1班', type:'正式', score:79, dur:'08:59'},
+  {t:'2026-10-25 08:47', name:'王强', cls:'隧道工程2024-1班', type:'正式', score:86, dur:'07:31'},
+  {t:'2026-10-25 09:26', name:'王强', cls:'隧道工程2024-1班', type:'实操模拟', score:81, dur:'08:15'}
+];
+let liveCount = 0;          // 本次会话实时流入条数
+let seedBase = Date.now() % 100000;
+
+/* ===== 工具 ===== */
+function rnd(seed, a, b){ // 固定种子伪随机：同一序号结果一致
+  const x = Math.sin(seed) * 10000;
+  return a + (x - Math.floor(x)) * (b - a);
+}
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtTime(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function scoreCls(s){ return s>=85?'ok':(s>=70?'mid':'low'); }
+function avg(arr){ return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0; }
+function toast(msg, tag){ const t = document.createElement('div'); t.className='toast'; t.innerHTML = tag?`<b>[${tag}]</b> ${msg}`:msg; document.body.appendChild(t); requestAnimationFrame(()=>t.classList.add('show')); setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),320); }, 2600); }
+
+/* ===== 视图路由 ===== */
+function go(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('view-'+view).classList.add('active');
+  window.location.hash = view;
+  if(view==='teacher'){ ensureCharts(); refreshTrend(true); refreshClass(); }
+  if(view==='home'){ /* hero 动画由 CSS 自动播放 */ }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+window.addEventListener('hashchange', ()=>{
+  const v = location.hash.replace('#','') || 'home';
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  const el = $('view-'+v) || $('view-home');
+  el.classList.add('active');
+  if(v==='teacher'){ ensureCharts(); refreshTrend(true); refreshClass(); }
+  if(v==='home') window.scrollTo({top:0});
+});
+
+/* ===== 首页：DJ3G 交互 ===== */
+function pickCode(code){
+  currentCode = code;
+  document.querySelectorAll('.char').forEach(c=>c.classList.toggle('on', c.dataset.code===code));
+  const d = CODES[code];
+  $('mk').textContent = code;
+  $('mk-en').textContent = d.en;
+  $('md').textContent = d.desc;
+  $('mp').innerHTML = d.params.map(p=>`<span>${p}</span>`).join('');
+  // 联动台车部件
+  const partMap = {D:'arm1', J:'cab', '3':'arm2', G:'reel'};
+  $('rigStage').querySelectorAll('circle').forEach(c=>{
+    const g = c.parentNode;
+    if(g.dataset.part===partMap[code]) g.classList.add('on'); else g.classList.remove('on');
+  });
+  // 键盘可达
+}
+
+/* ===== 首页：台车部件热点 ===== */
+function bindRig(){
+  const stage = $('rigStage'), tip = $('rigTip'), info = $('rigInfo');
+  stage.querySelectorAll('g').forEach(g=>{
+    // 透明放大命中区：移动端易点
+    const vis = g.querySelector('circle');
+    if(vis){
+      const ghost = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      ghost.setAttribute('cx', vis.getAttribute('cx'));
+      ghost.setAttribute('cy', vis.getAttribute('cy'));
+      ghost.setAttribute('r', Math.round(parseFloat(vis.getAttribute('r'))*1.9));
+      ghost.setAttribute('class','ghost');
+      g.insertBefore(ghost, vis);
+    }
+    g.addEventListener('click', e=>{
+      const p = PARTS[g.dataset.part];
+      currentPart = g.dataset.part;
+      stage.querySelectorAll('g').forEach(x=>x.classList.remove('on'));
+      g.classList.add('on');
+      $('riName').textContent = p.name;
+      $('riCode').textContent = p.code;
+      $('riDesc').textContent = p.desc;
+      info.classList.add('show');
+      tip.textContent = p.name; tip.classList.add('show');
+      setTimeout(()=>tip.classList.remove('show'), 1600);
+      // 联动字母
+      const charMap = {arm1:'D', arm2:'3', arm3:'3', cab:'J', plat:'J', wheel:'J', reel:'G'};
+      pickCode(charMap[g.dataset.part]);
+      e.stopPropagation();
+    });
+    g.addEventListener('mouseenter', ()=>{
+      tip.textContent = PARTS[g.dataset.part].name; tip.classList.add('show');
+    });
+    g.addEventListener('mouseleave', ()=>tip.classList.remove('show'));
+  });
+  stage.addEventListener('click', e=>{ if(e.target===stage || e.target.tagName==='IMG') info.classList.remove('show'); });
+}
+
+/* ===== 教员后台：学员与记录渲染 ===== */
+function renderStudents(){
+  const body = $('studentBody');
+  body.innerHTML = students.map(s=>`
+    <tr class="row-link${currentStudent===s.name?' on':''}" onclick="pickStudent('${s.name}')">
+      <td><b>${s.name}</b></td><td>${s.cls}</td><td class="num">${s.rounds}</td><td class="score ${scoreCls(s.avg)}">${s.avg}</td>
+    </tr>`).join('');
+  const sel = $('repStudent');
+  if(!sel.dataset.ready){
+    sel.innerHTML = students.map(s=>`<option>${s.name}（${s.cls}）</option>`).join('');
+    sel.dataset.ready = '1';
+  }
+  if(!currentStudent){ currentStudent = students[0].name; }
+}
+function pickStudent(name){
+  currentStudent = name;
+  document.querySelectorAll('#studentBody .row-link').forEach(r=>r.classList.toggle('on', r.textContent.includes(name)));
+  $('radarHint').textContent = name + ' · 六维能力';
+  refreshRadar();
+}
+function renderRecords(){
+  const body = $('recordBody');
+  const top = records.slice(0, 50).map(r=>`
+    <tr>
+      <td class="num">${r.t}</td><td><b>${r.name}</b></td><td>${r.cls}</td>
+      <td><span class="badge ${r.type==='正式'?'formal':'sim'}">${r.type}</span></td>
+      <td class="score ${scoreCls(r.score)}">${r.score}</td><td class="num">${r.dur}</td>
+    </tr>`).join('');
+  body.innerHTML = top;
+}
+function pushRecord(){
+  const s = students[Math.floor(rnd(seedBase + liveCount, 0, students.length))];
+  const type = rnd(seedBase + liveCount + 7, 0, 1) < 0.5 ? '正式' : '实操模拟';
+  const score = Math.round(rnd(seedBase + liveCount + 13, 55, 99));
+  const mins = 6 + Math.floor(rnd(seedBase + liveCount + 19, 0, 7));
+  const secs = Math.floor(rnd(seedBase + liveCount + 29, 0, 60));
+  records.unshift({ t: fmtTime(new Date()), name: s.name, cls: s.cls, type, score, dur: `${pad2(mins)}:${pad2(secs)}` });
+  liveCount++;
+  // 学员累计
+  s.rounds++;
+  s.avg = avg(records.filter(r=>r.name===s.name).map(r=>r.score));
+  renderRecords();
+  renderStudents();
+  refreshStats();
+  refreshTrend(false);
+  if(currentStudent===s.name) refreshRadar();
+}
+function refreshStats(){
+  const sims = records.filter(r=>r.type==='实操模拟'), forms = records.filter(r=>r.type==='正式');
+  $('sRounds').textContent = records.length;
+  $('sAvgAll').textContent = avg(records.map(r=>r.score));
+  $('sAvgSim').textContent = avg(sims.map(r=>r.score));
+  $('sAvgFormal').textContent = avg(forms.map(r=>r.score));
+  $('sRecords').textContent = records.length;
+  const deltas = { sAvgAll:[$('sAvgAllT'),$('sAvgAll')], sAvgSim:[$('sAvgSimT'),$('sAvgSim')], sAvgFormal:[$('sAvgFormalT'),$('sAvgFormal')], sRecords:[$('sRecordsT'),$('sRecords')] };
+  Object.keys(deltas).forEach(k=>{ if(k==='sRecords'){ deltas[k][0].textContent='↑ 实时'; return;} deltas[k][0].textContent = liveCount>0 ? '↑ 动态' : '↑'; });
+}
+
+/* ===== 图表（ECharts）===== */
+function chartOpt(domId, opt){ if(!charts[domId]){ charts[domId]=echarts.init($(domId)); } charts[domId].setOption(opt, true); }
+function ensureCharts(){ if(window.echarts && !charts.__loaded){ charts.__loaded = 1; refreshTrend(true); refreshClass(); refreshRadar(); } }
+
+/* 平均分趋势：最近 20 条滚动 */
+function refreshTrend(force){
+  if(!window.echarts || !$('chartTrend')) return;
+  const n = records.slice(0, 20).reverse();
+  chartOpt('chartTrend', {
+    backgroundColor:'transparent',
+    grid:{ left:36, right:16, top:30, bottom:24 },
+    tooltip:{ trigger:'axis', confine:true },
+    xAxis:{ type:'category', data:n.map(r=>r.t.slice(5,16)), axisLabel:{ fontSize:10, color:'#3d5473', interval:2 } },
+    yAxis:{ type:'value', min:40, max:100, axisLabel:{ fontSize:10, color:'#3d5473' }, splitLine:{ lineStyle:{ color:'#eef3fb' } } },
+    series:[{
+      type:'line', name:'考核得分', smooth:true, symbolSize:5,
+      data:n.map(r=>r.score),
+      lineStyle:{ width:2.5, color:'#1d6ae5' },
+      itemStyle:{ color:'#1d6ae5' },
+      areaStyle:{ color:{ type:'linear', x:0, y:0, x2:0, y2:1, colorStops:[{offset:0,color:'rgba(29,106,229,.28)'},{offset:1,color:'rgba(29,106,229,.02)'}] } },
+      markLine:{ silent:true, symbol:'none', data:[{ yAxis: avg(records.map(r=>r.score)), lineStyle:{ color:'#f59e0b', type:'dashed', width:1 }, label:{ show:true, formatter:'均值 '+avg(records.map(r=>r.score)), fontSize:10, color:'#a16207' } }] }
+    }]
+  });
+}
+
+/* 班级对比 */
+function refreshClass(){
+  if(!window.echarts || !$('chartClass')) return;
+  const c1 = records.filter(r=>r.cls.includes('2024-1班')), c2 = records.filter(r=>r.cls.includes('2024-2班'));
+  chartOpt('chartClass', {
+    backgroundColor:'transparent',
+    grid:{ left:36, right:16, top:28, bottom:24 },
+    tooltip:{ trigger:'axis', confine:true },
+    legend:{ top:2, right:8, itemWidth:12, itemHeight:8, textStyle:{ fontSize:10, color:'#3d5473' } },
+    xAxis:{ type:'category', data:['隧道工程2024-1班','隧道工程2024-2班'], axisLabel:{ fontSize:10.5, color:'#3d5473', interval:0 } },
+    yAxis:{ type:'value', min:0, max:100, axisLabel:{ fontSize:10, color:'#3d5473' }, splitLine:{ lineStyle:{ color:'#eef3fb' } } },
+    series:[
+      { name:'班级平均分', type:'bar', barWidth:26, data:[avg(c1.map(r=>r.score)), avg(c2.map(r=>r.score))], itemStyle:{ borderRadius:[5,5,0,0], color:'#1d6ae5' }, label:{ show:true, position:'top', fontSize:11, fontWeight:700, color:'#0d3a7e' } },
+      { name:'考核人次', type:'bar', barWidth:26, data:[c1.length, c2.length], itemStyle:{ borderRadius:[5,5,0,0], color:'#38bdf8' }, label:{ show:true, position:'top', fontSize:11, fontWeight:700, color:'#0d3a7e' } }
+    ]
+  });
+}
+
+/* 个人能力雷达（按学员得分特征推演，锚定其平均分） */
+const RADAR_DIMS = ['钻孔定位','钻臂操控','围岩判断','推进参数','故障处理','安全规范'];
+function refreshRadar(){
+  if(!window.echarts || !$('chartRadar')) return;
+  const s = students.find(x=>x.name===currentStudent) || students[0];
+  const base = s.avg;
+  const seed = s.name.split('').reduce((a,c)=>a+c.charCodeAt(0), 0);
+  const dims = RADAR_DIMS.map((d,i)=> Math.round(Math.min(99, Math.max(45, base + (rnd(seed+i*31, -12, 10)) ))));
+  const c1 = students.filter(x=>x.cls===s.cls).map(x=>x.avg);
+  chartOpt('chartRadar', {
+    backgroundColor:'transparent',
+    tooltip:{ confine:true },
+    legend:{ top:0, right:6, itemWidth:12, itemHeight:8, textStyle:{ fontSize:10, color:'#3d5473' } },
+    radar:{
+      indicator: RADAR_DIMS.map(d=>({ name:d, max:100 })),
+      radius:'66%', center:['50%','56%'],
+      splitArea:{ areaStyle:{ color:['rgba(29,106,229,.04)','rgba(29,106,229,.08)'] } },
+      axisLine:{ lineStyle:{ color:'#d8e6f7' } }, splitLine:{ lineStyle:{ color:'#d8e6f7' } },
+      axisName:{ fontSize:11, color:'#3d5473' }
+    },
+    series:[{
+      type:'radar',
+      data:[
+        { value:dims, name:s.name+' · 综合 '+base+' 分', areaStyle:{ color:'rgba(29,106,229,.35)' }, lineStyle:{ color:'#1d6ae5', width:2 }, itemStyle:{ color:'#1d6ae5' } },
+        { value:c1.map(()=>avg(c1)), name:s.cls.replace('隧道工程','')+' 班级均值 '+avg(c1), areaStyle:{ color:'rgba(56,189,248,.18)' }, lineStyle:{ color:'#38bdf8', width:1.5, type:'dashed' }, itemStyle:{ color:'#38bdf8' } }
+      ]
+    }]
+  });
+}
+
+/* ===== 报告流式生成（模拟后台智能体）===== */
+function genReport(type){
+  const btn = document.querySelector(`[data-rep="${type}"]`);
+  if(btn.dataset.busy==='1') return;
+  btn.dataset.busy='1'; btn.disabled = true;
+  const bar = $('bar-'+type), out = $('out-'+type);
+  out.classList.remove('show'); out.innerHTML=''; bar.style.display='block';
+  let prog = 0;
+  const tick = setInterval(()=>{
+    prog += 6 + Math.random()*10;
+    if(prog>=100){ prog=100; clearInterval(tick);
+      bar.querySelector('i').style.width='100%';
+      setTimeout(()=>{ bar.style.display='none'; out.classList.add('show'); btn.dataset.busy='0'; btn.disabled=false; }, 260);
+      streamText(type, out);
+    } else { bar.querySelector('i').style.width = prog + '%'; }
+  }, 90);
+}
+function streamText(type, out){
+  const txt = buildReport(type);
+  let i = 0, done = false;
+  const iv = setInterval(()=>{
+    const step = Math.max(1, Math.round(txt.length/220));
+    i = Math.min(txt.length, i+step);
+    out.innerHTML = reportHeadFor(type) + txt.slice(0,i) + (i<txt.length?'<span class="caret">▋</span>':'');
+    out.scrollTop = out.scrollHeight;
+    if(i>=txt.length){ clearInterval(iv); done=true; }
+  }, 16);
+}
+function reportHead(){ return ''; }
+function reportHeadFor(type){
+  if(type==='personal') return reportHeadPersonal();
+  if(type==='class'){ const cls=$('repClass').value; return `<div class="r-title">班级学情分析 <span class="tag">${cls}</span></div>`; }
+  return `<div class="r-title">平台教学质量报告 <span class="tag">动态演示 · 实时数据</span></div>`;
+}
+function reportHeadPersonal(){
+  const s = students.find(x=>x.name===currentStudent)||students[0];
+  return `<div class="r-title">个人学习报告 <span class="tag">${s.name} · ${s.cls}</span></div>`;
+}
+function buildReport(type){
+  if(type==='personal'){
+    const s = students.find(x=>x.name===currentStudent)||students[0];
+    const my = records.filter(r=>r.name===s.name);
+    const a = avg(my.map(r=>r.score));
+    const weak = a<75?'基础技能不稳定，需加强实操模拟频次':(a<85?'高分稳定性不足，正式考核易波动':'整体掌握良好，建议冲击高分');
+    return `综合评价：${s.name} 累计参加考核 ${s.rounds} 次，平均分 ${a} 分。${weak}。
+薄弱环节：${a<75?'钻臂定位与推进参数控制偏弱，围岩判断经验不足。':'钻孔定位精度较好，但复杂围岩条件下推进参数调整偏保守，故障处理响应可提速。'}
+改进建议：每周完成 2 次实操模拟（重点：掏槽眼布孔与钻臂轨迹校准），正式考核前完成 1 次仿真排障练习。
+下一步计划：两周内将平均分提升至 ${Math.min(95, a+6)} 分以上，并纳入班级互评环节。`;
+  }
+  if(type==='class'){
+    const cls = $('repClass').value;
+    const rows = cls==='全部班级' ? records : records.filter(r=>r.cls===cls);
+    const a = avg(rows.map(r=>r.score));
+    return `班级整体画像：${cls} 当前考核 ${rows.length} 人次，平均分 ${a} 分；正式考核 ${rows.filter(r=>r.type==='正式').length} 人次、实操模拟 ${rows.filter(r=>r.type==='实操模拟').length} 人次。
+典型特征：${a<78?'整体处于合格线附近，钻臂操控与围岩判断为主要失分项；':'整体掌握良好，实操表现优于正式考核，应试稳定性仍有提升空间。'}
+教学建议：① 增加 ${a<78?'针对性实操补训（每周 1 次小组轮训）':'高频小测（每周 1 次）'}；② 开展钻臂布孔与推进参数对照教学；③ 建立班级错题/失误台账。`;
+  }
+  const all = records.map(r=>r.score);
+  const a = avg(all);
+  return `教学质量评估：平台累计考核 ${records.length} 人次，整体平均分 ${a} 分，实操平均分 ${avg(records.filter(r=>r.type==='实操模拟').map(r=>r.score))} 分，正式考核平均分 ${avg(records.filter(r=>r.type==='正式').map(r=>r.score))} 分。
+优势：三臂作业教学体系完整，实操训练覆盖掏槽、辅助、周边眼全分工，学员钻臂操控能力提升明显。
+待优化：围岩判断与故障处理维度平均分偏低（<70 分），建议补充案例化教学模块与排障仿真练习。
+优化方案：① 新增围岩分级判读互动课件；② 每周安排 1 次故障排查模拟考核；③ 按班级实施差异化教学计划。`;
+}
+
+/* ===== tele agent 通道接入 ===== */
+function bindAgent(){
+  const v = $('agentAddr').value.trim();
+  if(!v){ toast('未填写通道地址，继续使用内置动态演示数据流。','动态演示'); return; }
+  if(!/^https?:\/\/.+/.test(v)){ toast('通道地址需以 http:// 或 https:// 开头。','格式提示'); return; }
+  toast('已接入 tele agent 平台通道（'+v.replace(/^https?:\/\//,'')+'），切换为真实数据推送模式。','绿灯在线');
+}
+
+/* ===== 初始化 ===== */
+(function init(){
+  renderStudents(); renderRecords(); refreshStats();
+  pickCode('D'); bindRig();
+  refreshTrend(true); refreshClass(); refreshRadar();
+  // 动态演示：每 6 秒推入一条新考核记录
+  setInterval(pushRecord, 6000);
+  // 秒级"数据流"提示心跳
+  setInterval(()=>{ const els = document.querySelectorAll('.live i'); els.forEach(i=>i.style.animation='none'); setTimeout(()=>els.forEach(i=>i.style.animation=''),50); }, 60000);
+  // 载入 hash 路由
+  const v = location.hash.replace('#','') || 'home';
+  if(v!=='home') go(v);
+  window.echartsLoad = ensureCharts;
+})();
+</script>
+</body>
+</html>
