@@ -707,6 +707,68 @@
             .footer-bottom { gap: 8px; justify-content: flex-start; }
             .footer-brand-col { min-width: 100%; }
         }
+        /* ================= 本轮新增组件样式 ================= */
+        .hero-banner { max-width: 1100px; margin: 0 auto 26px; }
+        .hero-banner img { width: 100%; height: auto; border-radius: 14px; box-shadow: 0 14px 34px rgba(0,61,121,0.16); display: block; }
+        .mode-bar { max-width: 1400px; margin: 10px auto 0; padding: 0 4%; display: flex; justify-content: flex-end; }
+        .mode-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #5a6b7f; background: #f2f6fb; border: 1px solid #dfe8f2; border-radius: 999px; padding: 5px 14px; }
+        .mode-dot { width: 8px; height: 8px; border-radius: 50%; background: #22b573; box-shadow: 0 0 0 3px rgba(34,181,115,0.18); }
+        .mode-dot.orange { background: #e6872e; box-shadow: 0 0 0 3px rgba(230,135,46,0.18); }
+        .docs-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 18px; }
+        .doc-card { display: block; background: #ffffff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 20px; text-decoration: none; transition: transform .18s, box-shadow .18s, border-color .18s; }
+        .doc-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,61,121,0.14); border-color: #005BAC; }
+        .doc-card-ico { width: 46px; height: 46px; border-radius: 12px; background: #e8f2ff; color: #005BAC; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+        .doc-card.alt .doc-card-ico { background: #fdf1e6; color: #e6872e; }
+        .doc-card h4 { font-size: 16px; color: #003D79; margin-bottom: 6px; }
+        .doc-card p { font-size: 13px; color: #6b7d90; line-height: 1.7; text-indent: 0; margin-bottom: 10px; }
+        .doc-card-go { font-size: 13px; color: #005BAC; font-weight: 600; }
+        .ai-chat-box { margin-top: 18px; background: #ffffff; border: 1px solid #e3eaf2; border-radius: 12px; overflow: hidden; }
+        .ai-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; background: linear-gradient(120deg, #003D79, #005BAC); color: #fff; flex-wrap: wrap; }
+        .ai-chat-head .ai-name { font-size: 16px; font-weight: 700; }
+        .ai-chat-head .ai-sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+        .ai-status-green { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: rgba(255,255,255,0.16); border-radius: 999px; padding: 4px 12px; }
+        .ai-status-green i { width: 8px; height: 8px; border-radius: 50%; background: #7CFC9A; box-shadow: 0 0 6px rgba(124,252,154,.9); }
+        .ai-chat-body { height: 330px; overflow-y: auto; padding: 16px 18px; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
+        .ai-msg { max-width: 86%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+        .ai-msg.bot { align-self: flex-start; background: #fff; border: 1px solid #e3eaf2; border-bottom-left-radius: 4px; }
+        .ai-msg.user { align-self: flex-end; background: #005BAC; color: #fff; border-bottom-right-radius: 4px; }
+        .ai-msg .ai-role { display: block; font-size: 11px; margin-bottom: 4px; opacity: .7; }
+        .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px 0; background: #f8fafc; }
+        .ai-chip { font-size: 12px; color: #005BAC; background: #e8f2ff; border: 1px solid #cfe2f7; border-radius: 999px; padding: 5px 12px; cursor: pointer; transition: background .15s; }
+        .ai-chip:hover { background: #d7e9fb; }
+        .ai-chat-input { display: flex; gap: 10px; padding: 12px 18px; border-top: 1px solid #e3eaf2; background: #fff; }
+        .ai-chat-input input { flex: 1; height: 40px; border: 1px solid #dbe5ef; border-radius: 8px; padding: 0 14px; font-size: 14px; }
+        .ai-chat-input input:focus { outline: none; border-color: #005BAC; }
+        .ai-chat-input button { height: 40px; padding: 0 22px; }
+        .corr-box { margin-top: 18px; background: #fff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 20px; }
+        .corr-field { display: flex; gap: 10px; margin-top: 14px; }
+        .corr-field textarea { flex: 1; border: 1px solid #dbe5ef; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit; min-height: 70px; resize: vertical; }
+        .corr-field textarea:focus { outline: none; border-color: #005BAC; }
+        .corr-res { margin-top: 14px; display: none; }
+        .corr-res.show { display: block; background: #f6fafe; border: 1px solid #dfe8f2; border-left: 4px solid #e6872e; border-radius: 8px; padding: 14px 16px; font-size: 14px; line-height: 1.7; }
+        .mm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+        .mm-card { background: #fff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 20px; }
+        .mm-card h4 { font-size: 15px; color: #003D79; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .mm-card p { font-size: 13px; color: #6b7d90; line-height: 1.7; text-indent: 0; }
+        .mm-btn { margin-top: 12px; }
+        .mm-feed { margin-top: 12px; font-size: 13px; color: #005BAC; min-height: 20px; }
+        .exam-online { margin-top: 22px; background: #fff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 22px; }
+        .exam-online h3 { color: #005BAC; font-size: 18px; margin-bottom: 6px; }
+        .exam-online .ex-sub { font-size: 13px; color: #6b7d90; margin-bottom: 16px; }
+        .ex-q { margin-bottom: 16px; }
+        .ex-q .ex-qtext { font-size: 14px; font-weight: 600; color: #1c2c3a; margin-bottom: 8px; }
+        .ex-q .ex-opt { border: 1px solid #dbe5ef; border-radius: 8px; padding: 9px 14px; margin-bottom: 6px; font-size: 13px; cursor: pointer; transition: background .15s, border-color .15s; }
+        .ex-q .ex-opt:hover { background: #f2f8ff; }
+        .ex-q .ex-opt.picked { border-color: #005BAC; background: #e8f2ff; }
+        .ex-q .ex-opt span.opt-key { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 50%; background: #eef4fa; color: #005BAC; font-size: 12px; margin-right: 8px; }
+        .ex-q .ex-opt.picked span.opt-key { background: #005BAC; color: #fff; }
+        .ex-q textarea.ex-sa { width: 100%; min-height: 84px; border: 1px solid #dbe5ef; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: inherit; resize: vertical; }
+        .ex-q textarea.ex-sa:focus { outline: none; border-color: #005BAC; }
+        .ex-result { display: none; margin-top: 8px; background: #f6fafe; border: 1px solid #dfe8f2; border-left: 4px solid #22b573; border-radius: 8px; padding: 16px 18px; font-size: 14px; line-height: 1.7; }
+        .ex-result.show { display: block; }
+        .ex-result .exr-score { font-size: 26px; font-weight: 700; color: #005BAC; }
+        .ex-sa-ans { background: #eef6ff; border-radius: 6px; padding: 10px 12px; margin-top: 8px; font-size: 13px; line-height: 1.6; }
+        @media (max-width: 900px){ .docs-cards, .mm-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -743,11 +805,17 @@
         </div>
     </nav>
 
+    <!-- 数据通道状态横幅（静态演示模式 / 服务端模式自动切换） -->
+    <div class="mode-bar">
+        <span class="mode-pill"><i class="mode-dot" id="modeDot"></i><span id="modeText">正在检测数据通道…</span></span>
+    </div>
+
     <!-- ================= 1. 首页（统一入口：学员入口/教员入口） ================= -->
     <div id="page-home" class="page-section active">
         <div class="home-hero">
-            <h2>三臂凿岩台车教学交互式智能体平台</h2>
-            <p>学、练、考一体化的沉浸式数字教学闭环 · 三维可视化 + AI 智能体</p>
+            <div class="hero-banner">
+                <img src="./assets/hero.jpg" alt="DJ3G 三臂凿岩台车 · 机型教学图（D-Drilling 钻孔凿岩 / J-Jumbo 台车 / 3-三根钻臂 / G-机型代号）" loading="eager">
+            </div>
             <div class="hero-entries">
                 <div class="hero-entry" onclick="enterPortal('student'); return false;">
                     <div class="hero-entry-icon">学</div>
@@ -886,8 +954,9 @@
                         <p>模拟操作模块是本平台的核心交互功能区。该模块基于高精度物理引擎开发，一比一复刻了三臂凿岩台车的真实操作台与作业环境。学员可通过键盘、鼠标或外接虚拟摇杆，实时控制左、中、右三根钻臂的变幅、回转、伸缩与推进动作，体验真实的凿岩作业过程。</p>
                         <div class="launch-area">
                             <a class="btn-primary" href="./sim3d.html" target="_blank" rel="noopener">进入三维模拟实操（3D 交互）</a>
-                            <span class="launch-tip">新窗口打开 · 27 个可交互部件 · 爆炸图 / 凿岩演示 / AI 助教 / 学习数据</span>
+                            <span class="launch-tip">新窗口打开 · 掌子面驾驶 / 三臂五关节 / 作业流程定位钻进 / 四维考核评分 / 8 步演示模式 / AI 助教 · 数据通道自动切换</span>
                         </div>
+                        <div id="onlineExamWrap"></div>
                     </div>
                     <div id="sim-physics" class="sub-content" style="display:none;">
                         <p>系统内置了极度仿真的底层运动逻辑与碰撞干涉预警机制。三根钻臂同时作业时，系统会进行精准的包围盒检测。若操作不当导致臂架相撞或与隧道壁发生碰撞，系统将立即报警并锁定操作。同时模拟不同围岩级别（II级-VI级）下的钻进阻力，提供真实的岩层硬度反馈。</p>
@@ -1007,12 +1076,15 @@
                 <div class="article-text" id="content-ai">
                     <div id="ai-tutor" class="sub-content active">
                         <p>智能助手是基于大语言模型与工程知识库深度定制的AI虚拟导师。它打破了传统的菜单式搜索，学员可通过文字或语音随时向助手提问，获得即时、专业的解答。无论是“钻臂液压系统压力不足如何排查”，还是“不同围岩等级下的钻孔参数如何调整”，智能助手都能依据国家标准与操作规范给出标准回复。</p>
+                        <div id="tutorChatWrap"></div>
                     </div>
                     <div id="ai-correction" class="sub-content" style="display:none;">
                         <p>在模拟操作过程中，如果学员出现违规动作，智能助手会主动介入。例如：当学员在未打开水阀的情况下直接开启冲击时，助手会弹窗提示“干钻风险”，并语音播报正确的操作规范。它就像一位全天候陪伴在您身边的现场高级技师，实时保障您的操作安全。</p>
+                        <div id="correctionWrap"></div>
                     </div>
                     <div id="ai-multimodal" class="sub-content" style="display:none;">
                         <p>支持语音唤醒与麦克风输入，解放双手，特别适合在佩戴VR头显时使用。回答专业问题时，不仅提供文字，还会自动附带液压图纸、拆解模型或操作视频片段。所有AI给出的解答，都会附带相关技术手册的出处（如《设备操作手册》第X页），确保信息的权威性。</p>
+                        <div id="multimodalWrap"></div>
                     </div>
                 </div>
             </div>
@@ -1037,6 +1109,32 @@
                 <div class="article-text" id="content-docs">
                     <div id="docs-library" class="sub-content active">
                         <p>技术文档中心是平台最权威的资料查阅库，提供全套的三臂凿岩台车标准化技术资料。库内收录了《设备操作与维护保养手册》、《液压与电气原理图集》、《常用备件目录》及《国家隧道施工安全操作规范汇编》等核心文件。所有文档均支持高清缩放与全文检索，关键步骤附带爆炸图与剖面图。</p>
+                        <div class="docs-cards">
+                            <a class="doc-card" href="https://qxb-img-osscache.qixin.com/standards/62d08c59e48690f1dc3918c97bd828c9.pdf" target="_blank" rel="noopener">
+                                <div class="doc-card-ico">册</div>
+                                <h4>操作保养手册</h4>
+                                <p>《铁路大型施工机械 · 隧道凿岩台车》TB/T 3557—2020 行业标准全文：台车分类、作业要求、凿岩机保养（首次保养不低于 500 冲击小时）等；另附 RB281 凿岩台车司机作业说明书。</p>
+                                <span class="doc-card-go">进入查阅 ↗</span>
+                            </a>
+                            <a class="doc-card alt" href="http://m.gongbaike.com/jixiejishuwendang/2012-06-19/450493.html" target="_blank" rel="noopener">
+                                <div class="doc-card-ico">图</div>
+                                <h4>液压电气图集</h4>
+                                <p>凿岩台车液压系统原理图（PDF 下载）与全液压钻车培训教材：冲击/回转/推进/支臂摆动液压回路组成与元件（主泵、换向阀、液压锁、溢流阀）逐一讲解。</p>
+                                <span class="doc-card-go">进入查阅 ↗</span>
+                            </a>
+                            <a class="doc-card" href="https://mtkxjs.com.cn/cn/article/pdf/preview/10.12438/cst.2022-1203.pdf" target="_blank" rel="noopener">
+                                <div class="doc-card-ico">文</div>
+                                <h4>前沿技术论文</h4>
+                                <p>《硬岩隧道掘进多臂协同钻孔技术研究》（煤炭科学技术）、《岩巷（隧道）智能化钻爆技术与装备研究现状及展望》等公开论文，覆盖定位精度、协同路径优化与智能钻爆装备。</p>
+                                <span class="doc-card-go">进入查阅 ↗</span>
+                            </a>
+                            <a class="doc-card alt" href="http://jtt.sc.gov.cn/jtt/c108703/2025/9/23/d19c9a2a09ba4a56a285d4228ffee126.shtml" target="_blank" rel="noopener">
+                                <div class="doc-card-ico">规</div>
+                                <h4>安全操作规程</h4>
+                                <p>《公路隧道施工技术规范》JTG/T 3660—2020 发布页、《公路水运工程生产安全重大事故隐患判定标准》（钻爆法条款）与《隧道掘进技术 · 钻爆法》团体标准。</p>
+                                <span class="doc-card-go">进入查阅 ↗</span>
+                            </a>
+                        </div>
                     </div>
                     <div id="docs-manual" class="sub-content" style="display:none;">
                         <p>包含从日常点检、润滑保养，到各系统定期维保的详细周期表。是设备管理人员必备的案头工具书。详细列出了不同工作小时数对应的保养项目，如更换液压油滤芯、检查履带张紧度等，有效指导现场维保作业，延长设备使用寿命。</p>
@@ -1516,7 +1614,7 @@
             var rows = list.map(function(x){
                 var d = new Date(x.ts || Date.now());
                 var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-                return '<tr><td>'+ds+'</td><td>'+(x.name||'-')+'</td><td>'+(x.cls||'-')+'</td><td>'+(x.type==='practical'?'实操模拟':'正式')+'</td><td class="score-cell">'+x.score+'</td><td>'+fmtTime(x.elapsed||0)+'</td></tr>';
+                return '<tr><td>'+ds+'</td><td>'+(x.name||'-')+'</td><td>'+(x.cls||'-')+'</td><td>'+(x.type==='practical'?'实操模拟':(x.type==='online'?'在线模拟':'正式'))+'</td><td class="score-cell">'+x.score+'</td><td>'+fmtTime(x.elapsed||0)+'</td></tr>';
             }).join('');
             wrap.innerHTML = '<table class="record-table"><thead><tr><th>时间</th><th>姓名</th><th>班级</th><th>类型</th><th>得分</th><th>用时</th></tr></thead><tbody>' + rows + '</tbody></table>';
         }
@@ -1570,6 +1668,334 @@
             document.body.appendChild(toast);
             setTimeout(function () { toast.remove(); }, 2600);
         }
+
+        /* ==================== 数据通道状态横幅（静态演示 / 服务端自动切换） ==================== */
+        function renderModeBar(mode) {
+            var dot = document.getElementById('modeDot');
+            var txt = document.getElementById('modeText');
+            if (!dot || !txt) return;
+            if (mode === 'server') {
+                dot.className = 'mode-dot';
+                txt.textContent = '服务端模式 · 真实数据已接通（本机 server.py + DeepSeek 报告）';
+            } else {
+                dot.className = 'mode-dot orange';
+                txt.textContent = '静态演示模式 · 本机浏览器记录与示例数据（运行本地 server.py 自动切换服务端模式）';
+            }
+        }
+        detectBackend(renderModeBar);
+
+        /* ==================== AI 虚拟导师（万问知识库 + DeepSeek 双通道） ==================== */
+        var TUTOR_LS = 'jumbo_tutor_v1';
+        function getTutorHistory(){ try{ return JSON.parse(localStorage.getItem(TUTOR_LS)) || []; }catch(e){ return []; } }
+        function saveTutorHistory(h){ try{ localStorage.setItem(TUTOR_LS, JSON.stringify(h.slice(-20))); }catch(e){} }
+        function initTutorChat(){
+            var wrap = document.getElementById('tutorChatWrap');
+            if (!wrap) return;
+            wrap.innerHTML =
+                '<div class="ai-chat-box">' +
+                '<div class="ai-chat-head">' +
+                '  <div><div class="ai-name">AI 虚拟导师</div><div class="ai-sub">三臂凿岩台车 / 土建 / 隧道施工 · 内置 10,000 级问答案例 · 服务端模式自动调用 DeepSeek</div></div>' +
+                '  <span class="ai-status-green"><i></i>已接入 TeleAgent 平台</span>' +
+                '</div>' +
+                '<div class="ai-chips" id="tutorChips"></div>' +
+                '<div class="ai-chat-body" id="tutorMsgs"></div>' +
+                '<div class="ai-chat-input"><input id="tutorInput" type="text" placeholder="输入问题，例如：HC95SA 凿岩机的冲击频率是多少？" maxlength="200"><button class="btn-primary btn-sm" id="tutorSend">发送</button></div>' +
+                '</div>';
+            var msgs = document.getElementById('tutorMsgs');
+            var input = document.getElementById('tutorInput');
+            var send = document.getElementById('tutorSend');
+            function addMsg(role, text){
+                var d = document.createElement('div');
+                d.className = 'ai-msg ' + role;
+                var r = document.createElement('span');
+                r.className = 'ai-role';
+                r.textContent = (role === 'user') ? '你' : 'AI 虚拟导师';
+                d.appendChild(r);
+                var t = document.createElement('span');
+                t.textContent = text;
+                d.appendChild(t);
+                msgs.appendChild(d);
+                msgs.scrollTop = msgs.scrollHeight;
+                return d;
+            }
+            function busy(b){ send.disabled = b; input.disabled = b; }
+            function ask(text){
+                if (!text || send.disabled) return;
+                input.value = '';
+                addMsg('user', text);
+                busy(true);
+                var typing = addMsg('bot', '正在检索知识库…');
+                detectBackend(function(mode){
+                    if (mode === 'server') {
+                        var h = getTutorHistory();
+                        var messages = [{role:'system', content: '你是三臂凿岩台车教学平台的 AI 虚拟导师，面向隧道施工机械学习者，用简体中文简洁、准确、可适当分点地回答问题，优先依据工程常识与操作规范作答。'}]
+                            .concat(h)
+                            .concat([{role:'user', content:text}]);
+                        fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({messages: messages, model:'deepseek-chat', max_tokens: 1024}), cache:'no-store'})
+                            .then(function(r){ return r.json(); }).then(function(j){
+                                if (j && j.ok && j.reply) {
+                                    var h = getTutorHistory();
+                                    h.push({role:'user', content:text}, {role:'assistant', content:j.reply});
+                                    saveTutorHistory(h);
+                                    typing.remove();
+                                    addMsg('bot', j.reply);
+                                } else {
+                                    typing.remove();
+                                    addMsg('bot', (j && j.error) ? j.error : '服务端 AI 返回异常，已回退本地知识库。\n' + localAnswer(text));
+                                }
+                                busy(false);
+                            }).catch(function(){
+                                typing.remove();
+                                addMsg('bot', '无法连接服务端 AI，已回退本地知识库检索。\n' + localAnswer(text));
+                                busy(false);
+                            });
+                    } else {
+                        setTimeout(function(){
+                            typing.remove();
+                            addMsg('bot', localAnswer(text));
+                            busy(false);
+                        }, 650);
+                    }
+                });
+            }
+            function localAnswer(text){
+                if (typeof window.kbAnswer === 'function') {
+                    var r = window.kbAnswer(text);
+                    if (r) return r;
+                }
+                return '【本地知识库】未检索到与「' + text.slice(0, 24) + '」直接匹配的问答。\n可尝试问：凿岩机 HC95SA 的参数 / 钻臂结构 / 液压系统原理 / 操作 SOP / 安全规程 / 保养周期 / 故障排查 / 钻爆法施工。\n（服务端模式下将由 DeepSeek 实时作答，覆盖更广。）';
+            }
+            send.onclick = function(){ ask(input.value.trim()); };
+            input.addEventListener('keydown', function(e){ if (e.key === 'Enter') ask(input.value.trim()); });
+            var chips = ['HC95SA 凿岩机的冲击频率是多少？', '什么是双三角自平行结构？', '作业前安全确认程序有哪些？', '遇到卡钎怎么办？', '什么是钻爆法？', '液压油温过高的原因？'];
+            var chipBox = document.getElementById('tutorChips');
+            chips.forEach(function(c){
+                var b = document.createElement('button');
+                b.className = 'ai-chip';
+                b.textContent = c;
+                b.type = 'button';
+                b.onclick = function(){ ask(c); };
+                chipBox.appendChild(b);
+            });
+            var h = getTutorHistory();
+            if (!h.length) {
+                addMsg('bot', '你好，我是本平台的 AI 虚拟导师（已接入 TeleAgent 平台）。可以问我三臂凿岩台车的结构、参数、原理、操作、安全与施工知识，也可以点上方推荐问题快速开始。');
+            } else {
+                h.forEach(function(m){ addMsg(m.role === 'user' ? 'user' : 'bot', m.content); });
+            }
+            input.focus();
+        }
+
+        /* ==================== 智能纠错（操作描述 → 违规识别 → 正确 SOP） ==================== */
+        var CORR_RULES = [
+            { kw: ['没开', '不开', '忘开', '未开'], must: ['水', '水阀'], problem: '未先开启水阀即进行冲击钻进', sop: '正确 SOP：对孔就绪 → 先开水阀向孔内供水 → 再开启冲击与回转 → 最后推进加压。', tip: '干钻会使钎头急剧升温损坏，并产生大量岩粉危害呼吸道，属严重违规（考核中该项直接失分）。' },
+            { kw: ['干钻'], must: [], problem: '干钻（未供水钻进）', sop: '正确 SOP：任何钻进前必须先开水阀，保持孔内供水冷却与排粉。', tip: '除损坏钎头外，干钻粉尘浓度极高，极易引发尘肺职业病。' },
+            { kw: ['没调平', '不调平', '未调平', '直接钻'], must: ['支腿', '车身', '机身'], problem: '未完成支腿支撑与车身调平即作业', sop: '正确 SOP：进场停稳 → 四支腿伸出支撑 → 左右调平机构消除俯仰/横滚（≤0.5°）→ 再开始对孔。', tip: '机体不稳固时钻进反力会导致台车晃动，钻孔偏差放大，甚至倾覆。' },
+            { kw: ['移车', '移动车', '开走'], must: ['臂', '收', '没收'], problem: '未收拢臂架即移车', sop: '正确 SOP：退钻 → 停冲击关水 → 臂架完全收拢 → 支腿收回 → 鸣笛低速移车。', tip: '未收臂移车极易碰撞掌子面或伤人，是典型违规操作。' },
+            { kw: ['超速', '开快', '猛开', '全速'], must: [], problem: '接近区超速行驶', sop: '正确 SOP：距掌子面 15 m 进入接近区限速约 1 m/s，并在 8~12 m 处停车制动。', tip: '超速接近掌子面一旦制动不及将冲撞岩面，触发限位撞停。' },
+            { kw: ['不通风', '没通风', '未通风'], must: [], problem: '作业前未确认通风', sop: '正确 SOP：作业前确认通风系统运行、空气合格（含瓦斯检测）后再进场。', tip: '爆破后炮烟未排净进入掌子面会中毒窒息，必须通风确认。' },
+            { kw: ['不戴', '没戴'], must: ['帽', '口罩', '耳', '防护'], problem: '未佩戴劳保用品', sop: '正确 SOP：进入作业面必须佩戴安全帽、耳塞、防尘口罩、防护眼镜与手套。', tip: '凿岩噪音超 100 dB、粉尘浓度高，无防护严重危害健康。' },
+            { kw: ['紧急', '急停'], must: [], problem: '紧急情况处置', sop: '正确 SOP：遇臂架碰撞、爆管、人员险情 → 立即按下急停 → 熄火断电 → 按应急预案处置并上报。', tip: '急停是最后一道保障，处置后须检修确认方可恢复作业。' }
+        ];
+        function initCorrection(){
+            var wrap = document.getElementById('correctionWrap');
+            if (!wrap) return;
+            wrap.innerHTML =
+                '<div class="corr-box">' +
+                '<h3 style="color:#005BAC;font-size:17px;margin-bottom:6px;">操作纠错 · 智能识别</h3>' +
+                '<p style="font-size:13px;color:#6b7d90;margin:0;">输入一段你的操作描述，智能纠错引擎将识别违规动作，并给出正确的标准化作业流程（SOP）与安全提示。</p>' +
+                '<div class="corr-field"><textarea id="corrInput" placeholder="示例：我没开水阀就直接开冲击钻进了。"></textarea></div>' +
+                '<button class="btn-primary" id="corrBtn" style="margin-top:10px;">智能纠错</button>' +
+                '<div class="corr-res" id="corrRes"></div>' +
+                '</div>';
+            var btn = document.getElementById('corrBtn');
+            var res = document.getElementById('corrRes');
+            btn.onclick = function(){
+                var t = (document.getElementById('corrInput').value || '').trim();
+                if (!t) { showToast('请先输入一段操作描述'); return; }
+                res.classList.add('show');
+                res.innerHTML = '<b>AI 纠错分析中…</b>';
+                setTimeout(function(){
+                    var hit = null;
+                    CORR_RULES.forEach(function(rule){
+                        if (hit) return;
+                        var hasKw = rule.kw.some(function(k){ return t.indexOf(k) >= 0; });
+                        var hasMust = rule.must.every(function(m){ return t.indexOf(m) >= 0; });
+                        if (hasKw && hasMust) hit = rule;
+                    });
+                    if (hit) {
+                        res.innerHTML = '<b>⚠ 识别到违规操作：' + hit.problem + '</b>' +
+                            '<br>· 你的描述：「' + t.slice(0, 60) + (t.length > 60 ? '…' : '') + '」' +
+                            '<br><br>' + hit.sop +
+                            '<br><br><span style="color:#e6872e;">安全提示：' + hit.tip + '</span>';
+                    } else {
+                        res.innerHTML = '未识别到明显违规动作。请描述更具体的操作环节（如“未开水阀直接冲击”“未收臂移车”“接近区开快车”等），或换一种表述再试。';
+                    }
+                }, 700);
+            };
+        }
+
+        /* ==================== 多模态交互（语音 / 图片 / 触控演示） ==================== */
+        function initMultimodal(){
+            var wrap = document.getElementById('multimodalWrap');
+            if (!wrap) return;
+            wrap.innerHTML =
+                '<div class="mm-grid">' +
+                '<div class="mm-card"><h4>🎙 语音输入</h4><p>佩戴 VR 或双手操作钻臂时，用语音提问解放双手。点击下方按钮说出问题，识别文本自动填入对话输入框。</p><button class="btn-primary btn-sm mm-btn" id="mmVoice">开始语音输入</button><div class="mm-feed" id="mmVoiceFeed"></div></div>' +
+                '<div class="mm-card"><h4>🖼 图片识别</h4><p>上传台车部件照片或故障截图，AI 将基于图片文件名与元件知识给出初步判断与查阅建议。</p><input type="file" id="mmFile" accept="image/*" style="margin-top:12px;font-size:12px;"><div class="mm-feed" id="mmFileFeed"></div></div>' +
+                '<div class="mm-card"><h4>🤝 触控 / VR 演示</h4><p>在三维模拟实操中支持多点触控：双指缩放视角、单指旋转、滑块微调关节；佩戴 VR 头显时可全程语音控制。</p><button class="btn-ghost mm-btn" id="mmDemo">模拟触控演示</button><div class="mm-feed" id="mmDemoFeed"></div></div>' +
+                '</div>';
+            var vBtn = document.getElementById('mmVoice');
+            var vFeed = document.getElementById('mmVoiceFeed');
+            vBtn.onclick = function(){
+                vFeed.textContent = '正在调起麦克风…';
+                var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) {
+                    vFeed.textContent = '当前浏览器不支持语音识别（演示模式）：请在 Chrome / Edge 中体验。语音能力已接入 TeleAgent 平台。';
+                    return;
+                }
+                try {
+                    var rec = new SR();
+                    rec.lang = 'zh-CN';
+                    rec.onresult = function(e){
+                        var txt = e.results[0][0].transcript;
+                        vFeed.textContent = '已识别：' + txt;
+                        var inp = document.getElementById('tutorInput');
+                        if (inp) { inp.value = txt; inp.focus(); }
+                    };
+                    rec.onerror = function(){ vFeed.textContent = '未识别到语音，请检查麦克风权限后重试。'; };
+                    rec.start();
+                } catch (err) {
+                    vFeed.textContent = '语音模块启动失败（演示模式）：' + err.message;
+                }
+            };
+            var fIn = document.getElementById('mmFile');
+            var fFeed = document.getElementById('mmFileFeed');
+            fIn.onchange = function(){
+                var f = fIn.files && fIn.files[0];
+                if (!f) return;
+                var name = f.name.toLowerCase();
+                var guess = '已接收图片「' + f.name + '」（' + Math.round(f.size / 1024) + ' KB）。';
+                if (/jumbo|台车|凿岩|drill/.test(name)) guess += 'AI 初步判断：三臂凿岩台车相关影像。建议对照《设备操作保养手册》部件章节与液压电气图集核验关键结构，或在 AI 虚拟导师中提问该部件的作用与维护要点。';
+                else if (/故障|异常|fault|error/.test(name)) guess += 'AI 初步判断：疑似故障记录影像。请按“现象→部位→系统”描述给智能纠错，或查阅故障排查专题资料。';
+                else guess += 'AI 已登记图片。可上传台车部件照片、故障截图或参数铭牌，以获取对应知识。';
+                fFeed.textContent = guess;
+            };
+            var dBtn = document.getElementById('mmDemo');
+            var dFeed = document.getElementById('mmDemoFeed');
+            dBtn.onclick = function(){
+                var steps = ['单指拖动：旋转视角', '双指缩放：拉近观察钻臂细节', '触摸关节滑块：微调对孔', '点击孔位标记：查看目标孔参数', '语音指令：打开 AI 助教提问'];
+                var i = 0;
+                dFeed.textContent = '触控演示：' + steps[0];
+                var iv = setInterval(function(){
+                    i++;
+                    if (i >= steps.length) { clearInterval(iv); dFeed.textContent = '触控演示完成 · 上述能力均可在三维模拟实操中体验。'; return; }
+                    dFeed.textContent = '触控演示：' + steps[i];
+                }, 900);
+            };
+        }
+
+        /* ==================== 在线模拟考试系统（选择 + 简答 · AI 在线阅卷 / 参考答案 / AI 主教批改） ==================== */
+        var ONLINE_BANK_SEL = [
+            { q: '三臂凿岩台车共配置几根可独立定位的钻臂？', opts: ['1 根', '2 根', '3 根', '4 根'], ans: 2, why: '三臂凿岩台车配置左、中、右三根钻臂，可同时作业三台凿岩机。' },
+            { q: 'HC95SA 凿岩机的冲击功率为？', opts: ['15 kW', '21 kW', '30 kW', '45 kW'], ans: 1, why: 'HC95SA 凿岩机冲击功率 21 kW。' },
+            { q: 'HC95SA 凿岩机的冲击频率为？', opts: ['45 Hz', '52 Hz', '63 Hz', '75 Hz'], ans: 2, why: '冲击频率 63 Hz。' },
+            { q: '推进梁的最大推进力为？', opts: ['12000 N', '18000 N', '23000 N', '30000 N'], ans: 2, why: '最大推进力 23000 N。' },
+            { q: '作业平台的额定载重为？', opts: ['200 kg', '300 kg', '400 kg', '600 kg'], ans: 2, why: '平台额定载重 400 kg。' },
+            { q: '钻臂对孔的径向偏差要求控制在？', opts: ['5 cm 以内', '10 cm 以内', '15 cm 以内', '20 cm 以内'], ans: 0, why: '径向偏差≤5 cm 即判定对孔就绪，偏差过大会放大钻孔偏斜。' },
+            { q: '作业前安全确认程序中，不包含以下哪一项？', opts: ['通风', '洒水', '撬浮石', '清点钻头数量'], ans: 3, why: '确认为通风、洒水、撬浮石、查盲炮、查支护、查设备，不含清点钻头。' },
+            { q: '关于干钻（未开水阀钻进），以下说法正确的是？', opts: ['会损坏钎头并产生大量粉尘', '钻进效率更高', '没有任何危害', '可以节约用水'], ans: 0, why: '干钻使钎头过热损坏并产生粉尘，属严重违规操作。' }
+        ];
+        var ONLINE_BANK_SA = [
+            { q: '简述液压凿岩机的破岩原理。', ref: '冲击+回转联合破岩：冲击活塞高频打击钎尾，冲击波沿钎杆传至钎头破碎岩石；回转马达带动钎杆旋转切削岩面并配合排粉；推进油缸持续加压保证钻进进尺。', keys: ['冲击', '回转', '推进'], hint: '关键词：冲击 / 回转 / 推进，答出“冲击与回转联合破岩”即得满分。' },
+            { q: '凿岩台车作业前必须完成哪些安全确认程序？', ref: '作业前确认：通风（含瓦斯检测）、洒水降尘、撬浮石排险、查盲炮、查支护、查设备状态，确认合格后方可进入掌子面作业。', keys: ['通风', '洒水', '撬浮石', '盲炮', '支护'], hint: '关键词：通风 / 洒水 / 撬浮石 / 查盲炮 / 查支护，答出任意三项得 60%，五项全出得满分。' },
+            { q: '简述三臂凿岩台车一个标准凿岩循环的操作流程。', ref: '进场定位停车 → 支腿支撑车身调平 → 选择孔位、钻臂对孔（偏差≤5cm）→ 开水阀 → 开启冲击回转 → 推进钻进 → 到深停冲击退钻 → 收拢臂架 → 移车进入下一循环。', keys: ['调平', '对孔', '开水', '冲击', '退钻', '收拢'], hint: '关键词：调平 / 对孔 / 开水阀 / 冲击回转 / 退钻 / 收拢，答出 4 个以上流程节点为合格。' }
+        ];
+        function initOnlineExam(){
+            var wrap = document.getElementById('onlineExamWrap');
+            if (!wrap) return;
+            var sel = ONLINE_BANK_SEL.map(function(item, i){
+                return '<div class="ex-q"><div class="ex-qtext">' + (i+1) + '.（选择）' + item.q + '</div>' +
+                    item.opts.map(function(o, j){
+                        return '<div class="ex-opt" data-sel="' + i + '" data-opt="' + j + '"><span class="opt-key">' + String.fromCharCode(65+j) + '</span>' + o + '</div>';
+                    }).join('') + '</div>';
+            }).join('');
+            var sa = ONLINE_BANK_SA.map(function(item, i){
+                return '<div class="ex-q"><div class="ex-qtext">' + (sel.length > 0 ? (ONLINE_BANK_SEL.length + i + 1) : (i + 1)) + '.（简答）' + item.q + '</div><textarea class="ex-sa" data-sa="' + i + '" placeholder="在此作答（50~300 字）"></textarea></div>';
+            }).join('');
+            wrap.innerHTML =
+                '<div class="exam-online" id="examOnlineBox">' +
+                '<h3>在线模拟考试系统</h3>' +
+                '<div class="ex-sub">三臂凿岩台车 · 选择题 8 道 + 简答题 3 道 · 交卷后 AI 在线阅卷、给出参考答案，并由 AI 主教批改（成绩自动进入学情记录）</div>' +
+                sel + sa +
+                '<button class="btn-primary" id="exSubmit" style="margin-top:6px;">交卷 · AI 在线阅卷</button>' +
+                '<div class="ex-result" id="exResult"></div>' +
+                '</div>';
+            var picks = {};
+            var saTexts = {};
+            wrap.querySelectorAll('.ex-opt').forEach(function(el){
+                el.onclick = function(){
+                    var si = el.getAttribute('data-sel');
+                    var oi = el.getAttribute('data-opt');
+                    picks[si] = parseInt(oi, 10);
+                    wrap.querySelectorAll('.ex-opt[data-sel="' + si + '"]').forEach(function(x){ x.classList.remove('picked'); });
+                    el.classList.add('picked');
+                };
+            });
+            wrap.querySelectorAll('.ex-sa').forEach(function(el){
+                el.oninput = function(){ saTexts[el.getAttribute('data-sa')] = el.value.trim(); };
+            });
+            var btn = document.getElementById('exSubmit');
+            var res = document.getElementById('exResult');
+            btn.onclick = function(){
+                var name = getMe().name || '';
+                if (!name) { showToast('请先填写姓名（可在考核评估·实操考核中填写，或点击右上角学员入口确认身份）'); return; }
+                var sCorrect = 0;
+                ONLINE_BANK_SEL.forEach(function(item, i){ if (picks[i] === item.ans) sCorrect++; });
+                var selScore = Math.round(sCorrect / ONLINE_BANK_SEL.length * 60);
+                var saRows = [];
+                var saScore = 0;
+                ONLINE_BANK_SA.forEach(function(item, i){
+                    var t = saTexts[i] || '';
+                    var hitKeys = item.keys.filter(function(k){ return t.indexOf(k) >= 0; });
+                    var ratio = Math.min(1, hitKeys.length / item.keys.length);
+                    var part = Math.round(ratio * 100);
+                    saScore += part;
+                    saRows.push({ q: item.q, t: t, part: part, hit: hitKeys, ref: item.ref, hint: item.hint });
+                });
+                var saAvg = Math.round(saScore / ONLINE_BANK_SA.length);
+                var total = selScore + Math.round(saAvg * 0.4);
+                res.classList.add('show');
+                res.innerHTML = '<b>AI 在线阅卷中…</b>';
+                setTimeout(function(){
+                    var comment = total >= 90 ? 'AI 主教批改：掌握扎实，作业流程规范，继续保持。'
+                        : total >= 70 ? 'AI 主教批改：整体合格，建议重点复习错题对应的知识点（干钻危害、安全确认程序）。'
+                        : 'AI 主教批改：基础仍需加强，请对照参考答案逐条复习，并在三维模拟实操中按 SOP 反复练习。';
+                    var saHtml = saRows.map(function(r){
+                        return '<div style="margin-top:12px;"><b>简答（得分 ' + r.part + '/100）：' + r.q + '</b>' +
+                            '<div style="font-size:13px;color:#6b7d90;margin-top:4px;">你的作答：' + (r.t || '（未作答）') + '</div>' +
+                            '<div style="font-size:13px;color:#005BAC;margin-top:4px;">命中知识点：' + (r.hit.length ? r.hit.join('、') : '无') + '　｜　评分参考：' + r.hint + '</div>' +
+                            '<div class="ex-sa-ans">参考答案：' + r.ref + '</div></div>';
+                    }).join('');
+                    res.innerHTML =
+                        '<b>AI 在线阅卷完成</b>　·　选择题得分 <span class="exr-score">' + selScore + '</span>/60　·　简答题平均 <span class="exr-score">' + saAvg + '</span>/100　·　综合 <span class="exr-score">' + total + '</span>/100' +
+                        '<div style="margin-top:8px;">' + comment + '</div>' +
+                        '<div style="margin-top:6px;font-size:13px;color:#6b7d90;">选择题错题解析：' + ONLINE_BANK_SEL.filter(function(item, i){ return picks[i] !== item.ans; }).map(function(item){ return item.q + '（' + item.why + '）'; }).join('；') + '（全部答对则无错题）</div>' +
+                        saHtml;
+                    submitAssessment({ name: name, cls: getMe().cls || '未分组', role: 'student', type: 'online', score: total, dims: { '选择': selScore, '简答': saAvg }, correct: sCorrect, totalQ: ONLINE_BANK_SEL.length, elapsed: 0, ts: Date.now() });
+                }, 900);
+            };
+        }
+
+        /* ==================== 页面加载初始化 ==================== */
+        document.addEventListener('DOMContentLoaded', function(){
+            initTutorChat();
+            initCorrection();
+            initMultimodal();
+            initOnlineExam();
+        });
     </script>
+    <!-- 内置知识库（10,000 条问答案例，本地检索；AI 虚拟导师/AI 助教静态模式兜底） -->
+    <script src="./jumbo_kb.js"></script>
 </body>
 </html>

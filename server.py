@@ -533,8 +533,8 @@ class Handler(SimpleHTTPRequestHandler):
 
         if path == "/api/assessments":
             atype = str(body.get("type") or "").strip()
-            if atype not in ("practical", "formal"):
-                self._json({"ok": False, "error": "type 必须为 practical 或 formal"}, 400)
+            if atype not in ("practical", "formal", "online"):
+                self._json({"ok": False, "error": "type 必须为 practical / formal / online"}, 400)
                 return
             with LOCK:
                 state = load_state()
