@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三臂凿岩台车 · 交互教学</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23151A20'/%3E%3Crect x='16' y='24' width='34' height='9' rx='4.5' transform='rotate(-45 33 28)' fill='%23F5B82E'/%3E%3Ccircle cx='33' cy='28' r='5' fill='%23E9EDF1'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* ============ 基础与变量 ============ */
+:root{
+  --bg:#0F1215;
+  --panel:rgba(21,26,32,.92);
+  --panel-solid:#151A20;
+  --panel2:#1A2129;
+  --line:#27303A;
+  --line-soft:#20272F;
+  --text:#E9EDF1;
+  --muted:#9BA6B0;
+  --dim:#66717C;
+  --accent:#F5B82E;
+  --accent-hi:#FFC96B;
+  --blue:#3EA8FF;
+  --ok:#3FB57B;
+  --mono:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  position:fixed;inset:0;overflow:hidden;
+  font-family:var(--sans);
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:var(--sans);border:0;background:none;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ============ 3D 画布 ============ */
+#canvas-container{position:absolute;inset:0}
+#canvas-container canvas{display:block;width:100%;height:100%}
+
+/* ============ HUD 通用 ============ */
+.hud{position:absolute;z-index:10}
+
+/* ============ 顶栏 ============ */
+.hud-top{
+  top:0;left:0;right:0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;padding:12px 14px;
+  pointer-events:none;
+  background:linear-gradient(to bottom, rgba(15,18,21,.9), rgba(15,18,21,0));
+}
+.title-block{pointer-events:auto;min-width:0}
+.eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;
+  color:var(--accent);margin-bottom:5px;white-space:nowrap;
+}
+.title-block h1{
+  font-size:21px;font-weight:900;letter-spacing:.02em;line-height:1.15;white-space:nowrap;
+}
+.title-block p.sub{
+  font-size:11.5px;color:var(--muted);margin-top:4px;white-space:nowrap;
+}
+.controls{
+  display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;
+  pointer-events:auto;max-width:64%;
+}
+.ctl-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:8px 11px;border-radius:9px;
+  font-size:12px;font-weight:500;color:var(--text);
+  background:var(--panel);border:1px solid var(--line);
+  transition:border-color .18s,background .18s,color .18s;
+  -webkit-tap-highlight-color:transparent;
+  min-height:36px;
+}
+.ctl-btn svg{width:14px;height:14px;flex:none}
+.ctl-btn:hover{border-color:var(--accent)}
+.ctl-btn.on{background:var(--accent);border-color:var(--accent);color:#1A1206;font-weight:700}
+.ctl-btn .lbl{white-space:nowrap}
+
+/* ============ 部件清单（左侧） ============ */
+#partsPanel{
+  top:88px;left:12px;bottom:14px;width:236px;
+  display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;
+  transform:translateX(-120%);
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+}
+#partsPanel.open{transform:translateX(0)}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 13px;border-bottom:1px solid var(--line);
+}
+.panel-head .ph-title{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.panel-head .ph-count{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+#partsList{flex:1;overflow-y:auto;padding:6px 6px 10px}
+#partsList::-webkit-scrollbar{width:5px}
+#partsList::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.grp-label{
+  font-size:10.5px;letter-spacing:.14em;color:var(--dim);
+  padding:10px 8px 5px;font-weight:700;
+}
+.p-item{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:7px 8px;border-radius:7px;text-align:left;
+  font-size:13px;color:var(--text);line-height:1.3;
+  transition:background .15s;
+}
+.p-item:hover{background:rgba(255,255,255,.05)}
+.p-item.sel{background:rgba(245,184,46,.14)}
+.p-item .idx{font-family:var(--mono);font-size:10px;color:var(--dim);width:20px;flex:none}
+.p-item .chip{width:9px;height:9px;border-radius:3px;flex:none}
+.p-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-item.kid{padding-left:38px;font-size:12.5px}
+.p-item.kid .idx{visibility:hidden}
+
+/* ============ 信息面板（右侧） ============ */
+#infoPanel{
+  top:88px;right:12px;width:min(356px,calc(100vw - 24px));
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px 16px 12px;
+  opacity:0;visibility:hidden;transform:translateY(8px);
+  transition:opacity .25s,transform .25s,visibility .25s;
+  pointer-events:auto;
+  max-height:calc(100% - 190px);overflow-y:auto;
+}
+#infoPanel.open{opacity:1;visibility:visible;transform:translateY(0)}
+.info-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.info-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--accent);
+  border:1px solid rgba(245,184,46,.4);border-radius:20px;padding:3px 9px;
+}
+.info-close{color:var(--dim);padding:4px;border-radius:6px;display:flex}
+.info-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.info-close svg{width:15px;height:15px}
+.info-title{font-size:18px;font-weight:800;letter-spacing:.01em;margin:8px 0 1px}
+.info-en{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.info-desc{font-size:13px;line-height:1.7;color:#C6CFD6;margin:10px 0 11px}
+.specs{border-top:1px solid var(--line-soft);padding-top:9px}
+.spec-row{display:flex;gap:10px;padding:4px 0;font-size:12px;line-height:1.5}
+.spec-row .k{flex:none;width:82px;color:var(--dim)}
+.spec-row .v{flex:1;color:#D7DEE4;font-family:var(--mono);font-size:11.5px}
+.info-note{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+
+/* ============ 底部作业流程 ============ */
+#workflow{
+  left:50%;transform:translateX(-50%);bottom:16px;
+  display:flex;align-items:center;gap:2px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:7px 10px;
+  max-width:calc(100vw - 24px);overflow-x:auto;
+  pointer-events:auto;
+}
+#workflow::-webkit-scrollbar{display:none}
+.wf-step{
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+  padding:5px 9px;border-radius:8px;font-size:11.5px;color:var(--muted);
+}
+.wf-step .wf-idx{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.wf-step.cur{background:rgba(245,184,46,.16);color:var(--accent-hi);font-weight:700}
+.wf-step.cur .wf-idx{color:var(--accent)}
+.wf-arrow{color:var(--dim);font-size:11px;flex:none;padding:0 1px}
+
+/* ============ 提示条 + 服务状态 ============ */
+#hintWrap{
+  right:14px;bottom:18px;display:flex;flex-direction:column;align-items:flex-end;gap:7px;
+  pointer-events:none;
+}
+#apiChip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;
+  color:var(--muted);background:var(--panel);
+  border:1px solid var(--line);border-radius:20px;padding:4px 10px;
+}
+#apiChip .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+#apiChip.on .dot{background:var(--ok);box-shadow:0 0 6px rgba(63,181,123,.8)}
+#apiChip.off .dot{background:var(--dim)}
+#hintBar{
+  font-size:11px;color:var(--dim);
+  font-family:var(--mono);letter-spacing:.02em;text-align:right;pointer-events:none;
+}
+
+/* ============ 3D 标签 ============ */
+#labels{position:absolute;inset:0;pointer-events:none;z-index:8}
+.tag{
+  position:absolute;left:0;top:0;
+  display:flex;align-items:center;gap:6px;
+  padding:4px 9px;border-radius:20px;
+  background:rgba(15,18,21,.78);border:1px solid rgba(158,174,187,.28);
+  font-size:11.5px;color:#E4E9ED;white-space:nowrap;
+  opacity:0;transition:opacity .25s;
+  will-change:transform,left,top;
+}
+.tag .dot{width:6px;height:6px;border-radius:50%;flex:none}
+.tag .t-idx{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+#labels.hide{display:none}
+
+/* ============ 移动端抽屉按钮 ============ */
+#menuToggle{
+  left:12px;bottom:18px;width:44px;height:44px;border-radius:12px;
+  background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--text);
+}
+#menuToggle svg{width:18px;height:18px}
+#scrim{position:fixed;inset:0;background:rgba(6,8,10,.5);opacity:0;visibility:hidden;transition:.25s;z-index:9}
+#scrim.show{opacity:1;visibility:visible}
+
+/* ============ 学习资料面板（居中模态） ============ */
+#learnPanel{
+  position:fixed;left:50%;top:50%;z-index:40;
+  transform:translate(-50%,-46%) scale(.98);
+  width:min(700px,calc(100vw - 20px));
+  max-height:min(600px,calc(100vh - 90px));
+  display:flex;flex-direction:column;
+  background:rgba(19,24,30,.97);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .22s,transform .22s,visibility .22s;
+}
+#learnPanel.open{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.lp-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:13px 16px 0;
+}
+.lp-title{font-size:15px;font-weight:800;letter-spacing:.02em}
+.lp-title .lp-en{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-weight:500;letter-spacing:.14em;display:block;margin-top:2px}
+.lp-close{color:var(--dim);padding:5px;border-radius:7px;display:flex}
+.lp-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.lp-close svg{width:16px;height:16px}
+.lp-tabs{
+  display:flex;gap:4px;padding:12px 16px 0;border-bottom:1px solid var(--line-soft);
+  overflow-x:auto;
+}
+.lp-tabs::-webkit-scrollbar{display:none}
+.lp-tab{
+  flex:none;padding:8px 14px;border-radius:8px 8px 0 0;
+  font-size:12.5px;font-weight:600;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.lp-tab:hover{color:var(--text)}
+.lp-tab.on{color:var(--accent-hi);border-bottom-color:var(--accent)}
+.lp-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.lp-body::-webkit-scrollbar{width:6px}
+.lp-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.tab-pane{display:none}
+.tab-pane.on{display:flex;flex-direction:column;gap:14px}
+.pgroup,.kgroup{
+  background:var(--panel2);border:1px solid var(--line-soft);border-radius:10px;
+  padding:12px 14px;
+}
+.pgroup .pg-title,.kgroup .kg-title{
+  font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--accent);
+  margin-bottom:8px;
+}
+.pgroup table{width:100%;border-collapse:collapse;table-layout:fixed}
+.pgroup td{padding:5px 0;font-size:12px;line-height:1.5;vertical-align:top}
+.pgroup td.k{width:38%;color:var(--dim)}
+.pgroup td.v{color:#D7DEE4;font-family:var(--mono);font-size:11.5px}
+.pgroup .pg-note{font-size:11px;color:var(--dim);line-height:1.6;margin-top:8px;border-top:1px dashed var(--line-soft);padding-top:8px}
+.kgroup ul{list-style:none}
+.kgroup li{
+  position:relative;padding:4px 0 4px 16px;
+  font-size:12.5px;line-height:1.65;color:#C6CFD6;
+}
+.kgroup li::before{
+  content:"";position:absolute;left:2px;top:11px;
+  width:6px;height:6px;border-radius:2px;background:var(--accent);
+}
+
+/* 学习数据 */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-card{
+  background:var(--panel2);border:1px solid var(--line-soft);border-radius:10px;
+  padding:12px 10px;text-align:center;
+}
+.stat-card .num{
+  font-family:var(--mono);font-size:21px;font-weight:700;color:var(--text);
+  line-height:1.15;
+}
+.stat-card .lbl{font-size:10.5px;color:var(--dim);margin-top:4px;letter-spacing:.05em}
+.rank-head,.rank-row{
+  display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;
+}
+.rank-head{font-size:11px;color:var(--dim);letter-spacing:.06em;border-bottom:1px solid var(--line-soft);margin-bottom:2px}
+.rank-row .rk{font-family:var(--mono);font-size:11px;color:var(--dim);width:22px;flex:none}
+.rank-row .rn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-row .rv{font-family:var(--mono);font-size:11px;color:var(--accent-hi)}
+.rank-row .bar{height:4px;border-radius:2px;background:rgba(245,184,46,.35);width:60px;flex:none;overflow:hidden}
+.rank-row .bar i{display:block;height:100%;background:var(--accent)}
+.stat-empty{font-size:12.5px;color:var(--dim);text-align:center;padding:26px 10px;line-height:1.8}
+.stat-mode{
+  font-size:10.5px;color:var(--dim);font-family:var(--mono);
+  border:1px dashed var(--line);border-radius:8px;padding:8px 10px;line-height:1.6;
+}
+.stat-mode b{color:var(--muted);font-weight:600}
+
+/* ============ 启动遮罩 ============ */
+#splash{
+  position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  background:var(--bg);transition:opacity .5s;
+}
+#splash.done{opacity:0;pointer-events:none}
+.sp-logo svg{width:46px;height:46px}
+.sp-txt{font-size:12.5px;color:var(--muted);letter-spacing:.08em}
+.sp-bar{width:150px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
+.sp-bar i{display:block;height:100%;width:38%;background:var(--accent);animation:loadbar 1.1s ease-in-out infinite}
+@keyframes loadbar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+#splash.err .sp-txt{color:#FF7A6B}
+
+/* ============ 入场动画 ============ */
+.title-block,.controls,.panel-head,#workflow,#hintWrap{opacity:0}
+body.ready .title-block{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .15s forwards}
+body.ready .controls{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .35s forwards}
+body.ready .panel-head{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .5s forwards}
+body.ready #workflow{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .65s forwards}
+body.ready #hintWrap{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .8s forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#workflow{transform:translateX(-50%)}
+body.ready #workflow{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .65s forwards}
+
+/* ============ 桌面端 ============ */
+@media (min-width:768px){
+  .hud-top{padding:16px 20px}
+  .title-block h1{font-size:26px}
+  .title-block p.sub{font-size:12.5px}
+  .ctl-btn{padding:9px 14px;font-size:12.5px;min-height:40px}
+  #partsPanel{left:16px;top:96px;width:252px;transform:none}
+  #menuToggle,#scrim{display:none}
+  #infoPanel{top:96px;right:16px}
+  #hintWrap{right:18px;bottom:20px}
+  #workflow{bottom:20px}
+  .tag{font-size:12px;padding:5px 11px}
+}
+
+/* ============ 窄屏学习面板 ============ */
+@media (max-width:480px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .lp-tabs{padding-left:12px;padding-right:12px}
+  .lp-body{padding:12px}
+}
+
+/* ============ 无障碍：减弱动效 ============ */
+@media (prefers-reduced-motion:reduce){
+  .title-block,.controls,.panel-head,#workflow,#hintWrap{opacity:1;animation:none}
+  .sp-bar i{animation:none;width:100%}
+  #splash{transition:none}
+}
+
+/* ============ AI 教学助教（DeepSeek） ============ */
+#aiFab{
+  position:fixed;right:14px;bottom:80px;z-index:30;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:52px;height:52px;border-radius:16px;
+  background:linear-gradient(160deg,#1E262F,#151A20);
+  border:1px solid var(--line);color:var(--accent);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);
+  transition:border-color .18s,transform .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+#aiFab svg{width:22px;height:22px}
+#aiFab span{font-size:9px;letter-spacing:.04em;color:var(--muted)}
+#aiFab:hover{border-color:var(--accent);transform:translateY(-1px)}
+#aiFab.on{background:var(--accent);color:#1A1206;border-color:var(--accent)}
+#aiFab.on span{color:#1A1206}
+#aiChat{
+  position:fixed;right:14px;bottom:142px;z-index:30;
+  width:min(370px,calc(100vw - 24px));
+  height:min(560px,calc(100vh - 162px));
+  display:flex;flex-direction:column;
+  background:rgba(19,24,30,.98);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(10px) scale(.98);
+  transition:opacity .2s,transform .2s,visibility .2s;
+  overflow:hidden;
+}
+#aiChat.open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+.aic-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 14px 10px;border-bottom:1px solid var(--line);
+}
+.aic-eyebrow{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--accent);margin-bottom:3px}
+.aic-name{font-size:14px;font-weight:700;letter-spacing:.03em}
+.aic-tools{display:flex;gap:4px}
+.aic-tools button{
+  width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);
+  transition:background .15s,color .15s;
+}
+.aic-tools button:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.aic-tools svg{width:15px;height:15px}
+.aic-body{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px}
+.aic-body::-webkit-scrollbar{width:5px}
+.aic-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.aic-msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.aic-msg.user{align-self:flex-end;background:rgba(245,184,46,.16);border:1px solid rgba(245,184,46,.35);border-bottom-right-radius:4px}
+.aic-msg.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--line-soft);border-bottom-left-radius:4px}
+.aic-msg.err{align-self:flex-start;background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.3);color:#FFB4B4}
+.aic-msg .aic-role{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--dim);margin-bottom:4px}
+.aic-msg.user .aic-role{color:var(--accent)}
+.aic-typing{display:inline-flex;gap:4px;padding:4px 2px}
+.aic-typing i{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:aicBlink 1.2s infinite}
+.aic-typing i:nth-child(2){animation-delay:.2s}
+.aic-typing i:nth-child(3){animation-delay:.4s}
+@keyframes aicBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.aic-input{display:flex;align-items:flex-end;gap:8px;padding:10px 12px 8px;border-top:1px solid var(--line)}
+#aiInput{
+  flex:1;resize:none;overflow-y:hidden;background:var(--panel-solid);border:1px solid var(--line);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding:9px 11px;max-height:110px;
+}
+#aiInput:focus{outline:none;border-color:var(--accent)}
+#aiInput::placeholder{color:var(--dim)}
+#aiSend{
+  width:38px;height:38px;flex:none;border-radius:10px;
+  background:var(--accent);color:#1A1206;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s;
+}
+#aiSend:disabled{opacity:.4;cursor:default}
+#aiSend svg{width:17px;height:17px}
+.aic-foot{padding:0 14px 10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--dim);text-align:right}
+@media (max-width:640px){
+  #aiFab{right:12px;bottom:76px;width:50px;height:50px}
+  #aiChat{right:10px;left:10px;bottom:134px;width:auto;height:calc(100vh - 150px)}
+}
+</style>
+</head>
+<body>
+
+<div id="canvas-container" aria-label="三臂凿岩台车 3D 交互模型"></div>
+
+<!-- 3D 部件标签层 -->
+<div id="labels" class="hide" aria-hidden="true"></div>
+
+<!-- 顶栏 -->
+<header class="hud hud-top">
+  <div class="title-block">
+    <div class="eyebrow">CM 系列 · 隧道施工机械</div>
+    <h1>三臂凿岩台车</h1>
+    <p class="sub">DJ3G 钻臂 · HC95SA 凿岩机 · 全液压三臂钻孔作业</p>
+  </div>
+  <div class="controls" role="toolbar" aria-label="视图控制">
+    <button class="ctl-btn on" id="btnLabels" aria-pressed="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span class="lbl">标注</span>
+    </button>
+    <button class="ctl-btn" id="btnExplode" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+      <span class="lbl">爆炸图</span>
+    </button>
+    <button class="ctl-btn" id="btnDemo" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg>
+      <span class="lbl">凿岩演示</span>
+    </button>
+    <button class="ctl-btn" id="btnLearn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span class="lbl">学习资料</span>
+    </button>
+    <button class="ctl-btn" id="btnReset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      <span class="lbl">复位视角</span>
+    </button>
+  </div>
+</header>
+
+<!-- 部件清单 -->
+<aside class="hud" id="partsPanel" aria-label="部件清单">
+  <div class="panel-head">
+    <span class="ph-title">部件清单</span>
+    <span class="ph-count" id="partsCount"></span>
+  </div>
+  <div id="partsList"></div>
+</aside>
+
+<!-- 信息面板 -->
+<section class="hud" id="infoPanel" aria-live="polite" aria-label="部件信息">
+  <div class="info-top">
+    <span class="info-tag" id="infoTag">承载结构</span>
+    <button class="info-close" id="infoClose" aria-label="关闭信息面板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="info-title" id="infoTitle">车体底盘</div>
+  <div class="info-en" id="infoEn">CHASSIS</div>
+  <p class="info-desc" id="infoDesc"></p>
+  <div class="specs" id="infoSpecs"></div>
+  <p class="info-note">* 部分参数为教学典型值，具体以对应机型手册为准。</p>
+</section>
+
+<!-- 底部作业流程 -->
+<nav class="hud" id="workflow" aria-label="隧道掘进作业流程">
+  <span class="wf-step cur"><span class="wf-idx">01</span>钻孔</span><span class="wf-arrow">›</span>
+  <span class="wf-step"><span class="wf-idx">02</span>装药</span><span class="wf-arrow">›</span>
+  <span class="wf-step"><span class="wf-idx">03</span>爆破</span><span class="wf-arrow">›</span>
+  <span class="wf-step"><span class="wf-idx">04</span>通风排险</span><span class="wf-arrow">›</span>
+  <span class="wf-step"><span class="wf-idx">05</span>出渣</span><span class="wf-arrow">›</span>
+  <span class="wf-step"><span class="wf-idx">06</span>支护</span>
+</nav>
+
+<div class="hud" id="hintWrap">
+  <span id="apiChip"><span class="dot"></span><span id="apiChipTxt">正在检测教学服务…</span></span>
+  <div id="hintBar">拖拽旋转 · 滚轮缩放 · 点击部件查看详情</div>
+</div>
+
+<button class="hud" id="menuToggle" aria-label="打开部件清单">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+</button>
+<div id="scrim"></div>
+
+<!-- 学习资料面板 -->
+<section id="learnPanel" aria-label="学习资料" aria-hidden="true">
+  <div class="lp-head">
+    <div class="lp-title">学习资料<span class="lp-en">TECHNICAL DATA · KNOWLEDGE · LEARNING</span></div>
+    <button class="lp-close" id="learnClose" aria-label="关闭学习资料">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="lp-tabs" role="tablist">
+    <button class="lp-tab on" data-tab="params" role="tab">技术参数</button>
+    <button class="lp-tab" data-tab="knowledge" role="tab">知识要点</button>
+    <button class="lp-tab" data-tab="stats" role="tab">学习数据</button>
+  </div>
+  <div class="lp-body">
+    <div class="tab-pane on" id="pane-params"></div>
+    <div class="tab-pane" id="pane-knowledge"></div>
+    <div class="tab-pane" id="pane-stats"></div>
+  </div>
+</section>
+
+<!-- 启动遮罩 -->
+<div id="splash">
+  <div class="sp-logo">
+    <svg viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#151A20"/><rect x="16" y="24" width="34" height="9" rx="4.5" transform="rotate(-45 33 28)" fill="#F5B82E"/><circle cx="33" cy="28" r="5" fill="#E9EDF1"/></svg>
+  </div>
+  <div class="sp-bar"><i></i></div>
+  <div class="sp-txt">正在加载 3D 教学模型…</div>
+</div>
+
+<!-- AI 教学助教（DeepSeek） -->
+<button class="hud" id="aiFab" role="button" tabindex="0" aria-label="打开 AI 教学助教" title="AI 教学助教">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <span>AI 助教</span>
+</button>
+<section class="hud" id="aiChat" aria-hidden="true" aria-label="AI 教学助教">
+  <div class="aic-head">
+    <div>
+      <span class="aic-eyebrow">JUMBO TEACH · DEEPSEEK</span>
+      <span class="aic-name">AI 教学助教</span>
+    </div>
+    <div class="aic-tools">
+      <button class="aic-clear" id="aiClear" title="清空对话" aria-label="清空对话">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+      </button>
+      <button class="aic-close" id="aiClose" aria-label="关闭 AI 助教">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="aic-body" id="aiMsgs"></div>
+  <div class="aic-input">
+    <textarea id="aiInput" rows="1" placeholder="问问凿岩台车的结构、参数或原理…（Enter 发送）"></textarea>
+    <button id="aiSend" aria-label="发送">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11.5 21 3l-8.5 18-2.5-7.5L3 11.5z"/></svg>
+    </button>
+  </div>
+  <div class="aic-foot" id="aiStatus"></div>
+</section>
+
+<script>
+/* ================= AI 教学助教（DeepSeek，双模式：本地 /api/chat · 静态云端代理） ================= */
+(function(){
+'use strict';
+/* ---- 配置 ---- */
+var AI_PROXY_URL = ''; /* 在线模式：部署 Cloudflare Worker 代理后填入，如 'https://xxx.workers.dev/chat'；本地模式留空即可 */
+var AI_MODEL = 'deepseek-chat';
+var AI_MAX_TOKENS = 2048;
+var AI_LS_KEY = 'jumbo_ai_chat_v1';
+var AI_MAX_HISTORY = 20;
+
+var fab = document.getElementById('aiFab');
+var panel = document.getElementById('aiChat');
+var msgsEl = document.getElementById('aiMsgs');
+var inputEl = document.getElementById('aiInput');
+var sendBtn = document.getElementById('aiSend');
+var statusEl = document.getElementById('aiStatus');
+var openFlag = false;
+var busy = false;
+var history = [];
+
+function loadHistory(){ try{ var h = JSON.parse(localStorage.getItem(AI_LS_KEY)); if(Array.isArray(h)) history = h.slice(-AI_MAX_HISTORY); }catch(e){ history = []; } }
+function saveHistory(){ try{ localStorage.setItem(AI_LS_KEY, JSON.stringify(history.slice(-AI_MAX_HISTORY))); }catch(e){} }
+
+function addMsg(role, text, cls){
+  var d = document.createElement('div');
+  d.className = 'aic-msg ' + (cls || role);
+  var r = document.createElement('span');
+  r.className = 'aic-role';
+  r.textContent = (role === 'user') ? '你' : 'AI 助教';
+  d.appendChild(r);
+  var t = document.createElement('span');
+  t.textContent = text;
+  d.appendChild(t);
+  msgsEl.appendChild(d);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+  return d;
+}
+function setStatus(t){ statusEl.textContent = t || ''; }
+function setBusy(b){ busy = b; sendBtn.disabled = b; }
+function backendMode(){ return (window.__JUMBO_API && window.__JUMBO_API.mode) ? window.__JUMBO_API.mode : 'local'; }
+
+function buildSystemPrompt(){
+  var ctx = (window.__JUMBO_API && window.__JUMBO_API.getContext) ? window.__JUMBO_API.getContext() : null;
+  var parts = (ctx && ctx.parts) ? ctx.parts : [];
+  var params = (ctx && ctx.params) ? ctx.params : {};
+  var knowledge = (ctx && ctx.knowledge) ? ctx.knowledge : {};
+  var lines = ['你是《三臂凿岩台车》交互教学站的 AI 助教，面向隧道施工机械学习者。'];
+  lines.push('回答要求：使用简体中文；简洁、准确、可适当分点；优先依据下方本站内置资料回答；资料未覆盖时按专业常识回答并注明；可建议用户在页面上点击对应部件查看 3D 细节。');
+  lines.push('');
+  lines.push('【部件清单】');
+  parts.forEach(function(p){ lines.push('- ' + (p.id || '') + '：' + (p.name || '') + (p.tag ? '（' + p.tag + '）' : '')); });
+  lines.push('');
+  lines.push('【技术参数】');
+  Object.keys(params).forEach(function(k){
+    var sec = params[k];
+    lines.push('◆ ' + (sec.title || k));
+    (sec.items || []).forEach(function(it){ lines.push('- ' + it[0] + '：' + it[1]); });
+    if(sec.note) lines.push('· ' + sec.note);
+  });
+  lines.push('');
+  lines.push('【知识要点】');
+  Object.keys(knowledge).forEach(function(k){
+    var sec = knowledge[k];
+    lines.push('◆ ' + (sec.title || k));
+    (sec.points || []).forEach(function(pt){ lines.push('- ' + pt); });
+  });
+  return lines.join('\n');
+}
+function chatEndpoint(){
+  if(backendMode() === 'server') return '/api/chat';
+  if(AI_PROXY_URL) return AI_PROXY_URL;
+  return '';
+}
+function sendQuestion(text){
+  var messages = [{role:'system', content: buildSystemPrompt()}]
+    .concat(history)
+    .concat([{role:'user', content: text}]);
+  var url = chatEndpoint();
+  if(!url){
+    addMsg('bot', '当前环境未配置 AI 通道：\n· 本地模式：运行 start_server.bat，并在 server.py 同目录放好 deepseek_key.txt 后可用；\n· 在线模式：部署 Cloudflare Worker 代理后填入页面顶部的 AI_PROXY_URL。\n详见 README「AI 教学助教」一节。', 'err');
+    return;
+  }
+  setBusy(true);
+  setStatus('AI 正在思考…');
+  fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ messages: messages, model: AI_MODEL, max_tokens: AI_MAX_TOKENS })
+  }).then(function(r){
+    return r.json().then(function(j){ return {ok: r.ok, j: j}; });
+  }).then(function(res){
+    if(res.j && res.j.ok && typeof res.j.reply === 'string'){
+      history.push({role:'user', content:text});
+      history.push({role:'assistant', content:res.j.reply});
+      saveHistory();
+      addMsg('bot', res.j.reply);
+    } else {
+      addMsg('bot', (res.j && res.j.error) ? res.j.error : 'AI 服务返回异常，请稍后再试。', 'err');
+    }
+    setStatus('');
+    setBusy(false);
+  }).catch(function(){
+    addMsg('bot', '网络请求失败：无法连接 AI 服务，请检查服务是否启动或云端代理是否可用。', 'err');
+    setStatus('');
+    setBusy(false);
+  });
+}
+function renderHistory(){
+  msgsEl.innerHTML = '';
+  if(!history.length){
+    addMsg('bot', '你好，我是本教学站的 AI 助教。可以问我三臂凿岩台车的部件结构、技术参数、工作原理、装配与维护要点，例如「凿岩机 HC95SA 的冲击频率是多少？」');
+    return;
+  }
+  history.forEach(function(m){
+    if(m.role === 'user') addMsg('user', m.content);
+    else if(m.role === 'assistant') addMsg('bot', m.content);
+  });
+}
+function openChat(){
+  openFlag = true;
+  panel.classList.add('open');
+  fab.classList.add('on');
+  panel.setAttribute('aria-hidden','false');
+  loadHistory();
+  renderHistory();
+  setStatus(backendMode() === 'server' ? '服务端模式 · DeepSeek 已连接' : (AI_PROXY_URL ? '在线模式 · 云端代理转发' : '未配置 AI 通道'));
+  setTimeout(function(){ inputEl.focus(); }, 60);
+}
+function closeChat(){
+  openFlag = false;
+  panel.classList.remove('open');
+  fab.classList.remove('on');
+  panel.setAttribute('aria-hidden','true');
+}
+function submit(){
+  var text = inputEl.value.trim();
+  if(!text || busy) return;
+  inputEl.value = '';
+  inputEl.style.height = '';
+  addMsg('user', text);
+  sendQuestion(text);
+}
+
+fab.addEventListener('click', function(){ openFlag ? closeChat() : openChat(); });
+fab.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openFlag ? closeChat() : openChat(); }
+});
+document.getElementById('aiClose').addEventListener('click', closeChat);
+document.getElementById('aiClear').addEventListener('click', function(){
+  history = [];
+  saveHistory();
+  renderHistory();
+});
+sendBtn.addEventListener('click', submit);
+inputEl.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); submit(); }
+});
+inputEl.addEventListener('input', function(){
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && openFlag) closeChat();
+});
+})();
+</script>
+
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+function showErr(msg){
+  var s=document.getElementById('splash');
+  s.classList.add('err');
+  var bar=s.querySelector('.sp-bar'); if(bar) bar.style.display='none';
+  s.querySelector('.sp-txt').textContent='3D 加载失败：'+msg+'，请检查网络后刷新。';
+}
+if(!window.THREE){ showErr('Three.js 未能加载'); return; }
+if(!window.THREE.OrbitControls){ showErr('控制器组件未能加载'); return; }
+
+/* ================= 服务端权威数据（本地内嵌副本，供离线/静态模式使用） ================= */
+var PARAMS = {
+  drill_boom: {
+    title: '钻臂 · DJ3G 型',
+    items: [
+      ["大臂形式", "圆形臂，双三角自平行定位"],
+      ["二节臂行程", "1600 mm"],
+      ["钻臂补偿", "1600 mm"],
+      ["推进补偿", "1800 mm"],
+      ["推进翻转角度", "±180°"],
+      ["大臂上扬角度", "65°"],
+      ["大臂下俯角度", "30°"],
+      ["大臂左右摆动角度", "±45°"]
+    ],
+    note: "重型钻臂双三角支撑；关节采用膨胀轴设计；恒压+负载敏感控制，远程先导控制。"
+  },
+  rock_drill: {
+    title: '凿岩机 · HC95SA',
+    items: [
+      ["冲击功率", "21 kW"],
+      ["冲击频率", "63 Hz"],
+      ["冲击压力", "200 bar"],
+      ["回转压力", "210 bar"],
+      ["凿岩速度", "2.5 ~ 3 m/min"],
+      ["钻孔直径", "43 ~ 102 mm"]
+    ],
+    note: "液压凿岩机：高压油转化为冲击能与回转扭矩，冲击+回转联合破岩。"
+  },
+  feed: {
+    title: '推进梁',
+    items: [
+      ["钻孔深度", "5250 mm"],
+      ["推进梁油缸行程", "1800 mm"],
+      ["最大推进力", "23000 N"],
+      ["梁体", "双底结构铝合金梁"],
+      ["滑台", "上下底面耐磨不锈钢保护"],
+      ["衬板", "配耐磨衬板，无金属直接接触"]
+    ],
+    note: "推进梁主要包括：铝合金梁组件、油管卷盘组件、凿岩机托板、推进油缸组件、油管过板、中扶钎器、前扶钎器、尾部护板组件、托板滑块等。"
+  },
+  platform: {
+    title: '作业平台',
+    items: [
+      ["平台举升高度", "13646 mm"],
+      ["平台摆动宽度", "16000 mm"],
+      ["平台额定载重", "400 kg"],
+      ["摆动角度", "±45°"],
+      ["俯仰角度", "+60° / -35°"],
+      ["服务平台延伸", "5000 mm"],
+      ["工作篮尺寸", "1400 × 1200 mm"]
+    ],
+    note: "应用：装药作业、撬毛作业、风管风筒安装、辅助作业、岩石加固作业、维修保养。"
+  }
+};
+var KNOWLEDGE = {
+  structure: {
+    title: "结构原理",
+    points: [
+      "钻臂由 基本臂 → 短臂 → T型梁 三段构成，末端连接推进梁；基本臂内设导向筒与伸缩臂。",
+      "大臂采用圆形臂、双三角自平行定位，专为承受大载荷设计，定位可靠准确。",
+      "钻臂关节采用独特的膨胀轴设计，确保钻臂与油缸紧密连接，延长部件寿命。",
+      "沿掘进方向看，三臂从左至右依次为 1 号臂、2 号臂、3 号臂；左臂推进梁在大臂左边，右臂推进梁在大臂右边。",
+      "作业平台采用 连接座→转接件→基本臂→一级伸缩臂→二级伸缩臂→吊篮 的伸缩臂式结构。"
+    ]
+  },
+  working: {
+    title: "工作原理",
+    points: [
+      "大臂举升为双油缸协同：上仰=两根油缸同时伸出；下俯=两根油缸同时缩回；摆动=一根伸出、一根缩回。",
+      "翻转油缸可带动推进梁 ±180° 旋转；外插角油缸（0~90°）与摆动缸（±180°）配合可实现径向锚杆孔钻设。",
+      "服务平台：随动油缸与吊篮油缸为随动关系（一个无杆腔连另一个有杆腔），始终保证吊篮处于水平状态。",
+      "凿岩机通过推进/回退油缸+钢丝绳往复传动：前进钢丝绳一端连凿岩机托盘、另一端经动滑轮连推进梁尾端，驱动凿岩机前进钻孔。"
+    ]
+  },
+  assembly: {
+    title: "装配要点",
+    points: [
+      "基本臂：胀销连接 6 处、螺栓连接 2 处、角度传感器 2 个、机械限位。",
+      "短臂：胀销连接 6 处、螺栓连接 2 处、两个角度传感器。",
+      "基本臂组件：大臂连接座、下部油缸连接座、大臂转接件、基本臂体、大臂伸缩油缸、导向筒、伸缩臂、下三角油缸。",
+      "短臂组件：短臂铰接接头、上部油缸转接件、短臂转接件、短臂体、上三角油缸防护架、上三角油缸。",
+      "T型梁组件：外插角油缸、翻转油缸转接件、T型梁、翻转油缸、外插角角度传感器。"
+    ]
+  },
+  maintain: {
+    title: "维护要点",
+    points: [
+      "润滑点打黄油，每个班检查一次，如需要及时补充黄油。",
+      "一级/二级伸缩臂调整垫、平台各铰点：每个班都需要检查润滑情况。",
+      "前扶钎器、中扶钎器上的耐磨套磨损量较大时应及时更换。",
+      "推进梁上下滑台底面均有耐磨不锈钢保护，配有耐磨衬板，没有金属与金属间的直接接触。"
+    ]
+  }
+};
+/* ================= 渲染器 / 场景 / 相机 ================= */
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var isMobile = window.innerWidth < 768;
+var canvasEl = document.getElementById('canvas-container');
+
+var renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1.8:2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+canvasEl.appendChild(renderer.domElement);
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0F1215);
+scene.fog = new THREE.Fog(0x0F1215, 80, 150);
+
+var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 300);
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 6;
+controls.maxDistance = 55;
+controls.minPolarAngle = 0.10;
+controls.maxPolarAngle = Math.PI*0.50;
+controls.enabled = false; /* 开场动画期间锁定 */
+
+/* ================= 光照与环境 ================= */
+var pmrem = new THREE.PMREMGenerator(renderer);
+(function(){
+  var s = new THREE.Scene();
+  s.background = new THREE.Color(0x23282E);
+  function panel(color,px,py,pz,rx,ry){
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(90,90), new THREE.MeshBasicMaterial({color:color}));
+    m.position.set(px,py,pz);
+    if(rx) m.rotation.x = rx;
+    if(ry) m.rotation.y = ry;
+    s.add(m);
+  }
+  panel(0xFFFFFF, 0,30,0, Math.PI/2, 0);       /* 顶部主光 */
+  panel(0xEAF2FF, 0,0,-45, 0, 0);              /* 前·冷色 */
+  panel(0x4A525C, 0,0,45, 0, Math.PI);         /* 后·暗部 */
+  panel(0x9AA4AD, -45,0,0, 0, Math.PI/2);      /* 左 */
+  panel(0x7F8891, 45,0,0, 0, -Math.PI/2);      /* 右 */
+  panel(0xD8E2EC, 0,-30,0, -Math.PI/2, 0);     /* 地面反射 */
+  scene.environment = pmrem.fromScene(s, 0.03).texture;
+})();
+pmrem.dispose();
+
+var hemi = new THREE.HemisphereLight(0xDFE8F2, 0x23272C, 0.8); scene.add(hemi);
+var key = new THREE.DirectionalLight(0xFFF1DF, 2.0);
+key.position.set(12,18,10);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-22; key.shadow.camera.right=22;
+key.shadow.camera.top=22;   key.shadow.camera.bottom=-22;
+key.shadow.camera.near=2;   key.shadow.camera.far=60;
+key.shadow.bias=-0.0006;
+scene.add(key);
+var fill = new THREE.DirectionalLight(0xBFD9FF, 0.55); fill.position.set(-9,6,-7); scene.add(fill);
+var rim  = new THREE.DirectionalLight(0x9FC7FF, 0.5);  rim.position.set(-8,7,12);  scene.add(rim);
+var bounce = new THREE.PointLight(0x3A4E63, 0.35, 26); bounce.position.set(0,0.4,1.5); scene.add(bounce);
+
+/* ================= 地面 + 工程网格 ================= */
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(120,120),
+  new THREE.MeshStandardMaterial({color:0x11151A, roughness:0.96, metalness:0})
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -0.002;
+ground.receiveShadow = true;
+scene.add(ground);
+var grid = new THREE.GridHelper(90, 45, 0x2E3A44, 0x1B232B);
+grid.position.y = 0;
+scene.add(grid);
+
+/* ================= 隧道轮廓（浅灰弧形线稿，对应参考图背景） ================= */
+(function(){
+  var mat = new THREE.LineBasicMaterial({color:0x44505C, transparent:true, opacity:0.6});
+  function arcLine(radius, yBase, z, segments){
+    var pts = [];
+    for(var i=0;i<=segments;i++){
+      var a = Math.PI + (Math.PI*(i/segments));
+      pts.push(new THREE.Vector3(Math.cos(a)*radius, yBase + Math.sin(a)*radius, z));
+    }
+    var geo = new THREE.BufferGeometry().setFromPoints(pts);
+    return new THREE.Line(geo, mat);
+  }
+  scene.add(arcLine(30, 0, -30, 80));
+  scene.add(arcLine(30, 0, -34, 80));
+  scene.add(arcLine(30, 0, -38, 80));
+  var baseGeo1 = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-30,0,-30), new THREE.Vector3(30,0,-30)]);
+  var baseGeo2 = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-30,0,-38), new THREE.Vector3(30,0,-38)]);
+  scene.add(new THREE.Line(baseGeo1, mat));
+  scene.add(new THREE.Line(baseGeo2, mat));
+  var axisPts = [];
+  for(var z=-30; z<=-14; z+=2){ axisPts.push(new THREE.Vector3(0,30,z)); }
+  var axisGeo = new THREE.BufferGeometry().setFromPoints(axisPts);
+  scene.add(new THREE.Line(axisGeo, mat));
+})();
+
+/* ================= 材质（黄蓝涂装，对应参考图） ================= */
+var MAT = {
+  yellow:  new THREE.MeshStandardMaterial({color:0xF5B82E, roughness:0.38, metalness:0.18}),
+  yellowD: new THREE.MeshStandardMaterial({color:0xDFA21F, roughness:0.45, metalness:0.22}),
+  blue:    new THREE.MeshStandardMaterial({color:0x2E5F8A, roughness:0.42, metalness:0.25}),
+  blueD:   new THREE.MeshStandardMaterial({color:0x22486B, roughness:0.5,  metalness:0.28}),
+  steel:   new THREE.MeshStandardMaterial({color:0x3A4149, roughness:0.55, metalness:0.45}),
+  steelD:  new THREE.MeshStandardMaterial({color:0x262C33, roughness:0.6,  metalness:0.4}),
+  rubber:  new THREE.MeshStandardMaterial({color:0x15181C, roughness:0.92, metalness:0}),
+  chrome:  new THREE.MeshStandardMaterial({color:0xC7CDD4, roughness:0.26, metalness:0.95}),
+  glass:   new THREE.MeshStandardMaterial({color:0x0D1620, roughness:0.08, metalness:0.15, transparent:true, opacity:0.82}),
+  white:   new THREE.MeshStandardMaterial({color:0xE6E9EC, roughness:0.5,  metalness:0.15}),
+  black:   new THREE.MeshStandardMaterial({color:0x101317, roughness:0.6,  metalness:0.2})
+};
+function box(w,h,d,mat,x,y,z,parent){
+  var m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z);
+  m.castShadow = true; m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+function cyl(rt,rb,h,seg,mat,x,y,z,parent,rot){
+  var m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg), mat);
+  m.position.set(x,y,z);
+  if(rot) m.rotation.set(rot.x||0, rot.y||0, rot.z||0);
+  m.castShadow = true; m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+/* 软管：Tube 生成弧形液压管线 */
+function hose(points, radius, mat, parent){
+  var curve = new THREE.CatmullRomCurve3(points);
+  var m = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, radius, 8, false), mat);
+  m.castShadow = true;
+  parent.add(m);
+  return m;
+}
+
+/* ================= 部件注册表（27 项） ================= */
+var PART_META = {
+  chassis:  {name:'车体底盘', en:'Chassis', tag:'承载结构', color:'#F5B82E', desc:'整机的焊接钢制骨架，连接行走、动力与工作装置，承受钻孔反力与整机载荷。', specs:[['车架形式','高强度钢焊接'],['承载量级','约 30 t 级'],['主要作用','连接各系统 · 承载']]},
+  wheels:   {name:'行走轮胎', en:'Wheel Drive', tag:'行走机构', color:'#2B3138', desc:'轮式行走系统，用于台车转场与隧道内就位；钻孔作业时由稳定支腿锁定车体。', specs:[['驱动形式','液压传动 · 4 轮驱动'],['转向','全轮转向（典型）'],['爬坡度','约 14°（典型）']]},
+  cab:      {name:'驾驶室', en:'Operator Cabin', tag:'操纵系统', color:'#2E5F8A', desc:'操作员驾驶与钻孔作业的场所，配备多路阀操作台与掌子面监控，顶部设防落石保护棚。', specs:[['乘员','2～3 人'],['操纵方式','多路阀 + 视频监控'],['安全','防落石顶棚']]},
+  power:    {name:'动力·液压系统', en:'Power & Hydraulics', tag:'动力单元', color:'#2E5F8A', desc:'柴油发动机（或电机）驱动液压泵站，为行走、钻臂各关节与推进机构提供动力，是台车的“心脏”。', specs:[['动力源','柴油机 / 电机'],['传动形式','液压泵站 · 比例控制'],['辅助','油温自动控制']]},
+  outrigger:{name:'稳定支腿', en:'Stabilizer Leg', tag:'辅助装置', color:'#F5B82E', desc:'钻孔作业前液压伸出并撑地，将整机重量转移到地面、锁死车体，保证炮孔定位精度。', specs:[['数量','4 支（前后各 2）'],['形式','液压伸缩 + 撑靴'],['使用时机','钻孔前伸出']]},
+  platform: {name:'作业平台', en:'Work Platform', tag:'高空作业装置', color:'#F5B82E', desc:'液压升降作业平台，用于装药、撬毛、风管风筒安装与辅助作业；平台始终水平，四周设安全护栏。', specs:[['举升高度','13646 mm'],['摆动宽度','16000 mm'],['额定载重','400 kg'],['摆动角度','±45°'],['俯仰角度','+60° / -35°'],['工作篮尺寸','1400 × 1200 mm']]},
+  boom:     {name:'钻臂', en:'Drill Boom', tag:'工作装置 · 钻臂', color:'#F5B82E', desc:'DJ3G 型重型钻臂，圆形臂双三角自平行定位；由基本臂、短臂、T型梁三段构成，末端连接推进梁。', specs:[['型号','DJ3G 型'],['数量','3 臂（本机）'],['二节臂行程','1600 mm'],['钻臂补偿','1600 mm'],['推进补偿','1800 mm'],['翻转角度','±180°'],['大臂上扬 / 下俯','65° / 30°'],['左右摆动','±45°']]},
+  arm:      {name:'基本臂', en:'Base Arm', tag:'钻臂 · 基本臂', color:'#F5B82E', desc:'钻臂第一段：大臂连接座、下部油缸连接座、大臂转接件与伸缩臂，内设导向筒，承载钻孔反力。', specs:[['结构','大臂连接座 + 伸缩臂'],['连接','胀销 6 处 · 螺栓 2 处'],['传感器','角度传感器 2 个'],['限位','机械限位']]},
+  short:    {name:'短臂', en:'Short Arm', tag:'钻臂 · 短臂', color:'#F5B82E', desc:'钻臂第二段：短臂铰接接头、上部油缸转接件与短臂转接件，与基本臂构成双三角自平行机构。', specs:[['结构','短臂铰接 + 上三角油缸'],['连接','胀销 6 处 · 螺栓 2 处'],['传感器','角度传感器 2 个']]},
+  tbeam:    {name:'T型梁', en:'T-Beam', tag:'钻臂 · T型梁', color:'#DFA21F', desc:'钻臂第三段：承载推进梁与凿岩机的 T 型连接梁，配外插角油缸与翻转油缸，实现推进梁 ±180° 翻转。', specs:[['组成','T型梁 + 翻转油缸'],['外插角油缸','0° ~ 90°'],['翻转','±180°'],['传感器','外插角角度传感器']]},
+  feed:     {name:'推进梁', en:'Feed', tag:'工作装置 · 推进', color:'#2E5F8A', desc:'双底结构铝合金梁，推进油缸推动凿岩机沿梁体前移，向孔底施加推进力；上下滑台配耐磨不锈钢保护。', specs:[['钻孔深度','5250 mm'],['油缸行程','1800 mm'],['最大推进力','23000 N'],['梁体','双底铝合金梁'],['衬板','耐磨衬板，无金属直接接触']]},
+  drill:    {name:'凿岩机', en:'Rock Drill', tag:'工作装置 · 破岩', color:'#DFA21F', desc:'HC95SA 液压凿岩机，将高压油转化为冲击能与回转扭矩，经钎杆传给钻头，冲击 + 回转联合破岩。', specs:[['型号','HC95SA'],['冲击功率','21 kW'],['冲击频率','63 Hz'],['冲击压力','200 bar'],['回转压力','210 bar'],['凿岩速度','2.5 ~ 3 m/min'],['钻孔直径','43 ~ 102 mm']]},
+  rod:      {name:'钎杆·钻头', en:'Rod & Bit', tag:'工作装置 · 钻具', color:'#C7CDD4', desc:'钎杆传递冲击波与回转扭矩，钻头硬质合金齿在冲击下破碎岩石，逐步形成炮孔。', specs:[['钎杆','高合金钢'],['钻头','硬质合金齿'],['扶钎器','前 / 中扶钎器导向']]}
+};
+var PARTS = [];
+var PART_MAP = {};
+function regPart(id, meta){
+  var p = {
+    id:id, name:meta.name, en:meta.en, tag:meta.tag, color:meta.color,
+    desc:meta.desc, specs:meta.specs, number:0,
+    meshes:[], group:null,
+    labelPoint:new THREE.Vector3(), focusPoint:new THREE.Vector3()
+  };
+  PARTS.push(p); PART_MAP[id]=p;
+  return p;
+}
+function boomMeta(n){
+  var b=PART_META.boom;
+  return {name:n+'号钻臂', en:'Drill Boom '+n, tag:b.tag, color:b.color, desc:b.desc,
+    specs:[['型号','DJ3G 型'],['数量','3 臂（本机）'],['本机位置','前部 '+n+' 号位'],['二节臂行程','1600 mm'],['钻臂补偿','1600 mm'],['推进补偿','1800 mm'],['翻转角度','±180°'],['大臂上扬 / 下俯','65° / 30°'],['左右摆动','±45°']]};
+}
+function subPartMeta(n, base, cn, en){
+  return {name:n+cn, en:en+' '+n, tag:base.tag, color:base.color, desc:base.desc, specs:base.specs};
+}
+regPart('chassis', PART_META.chassis);
+regPart('wheels', PART_META.wheels);
+regPart('cab', PART_META.cab);
+regPart('power', PART_META.power);
+regPart('outrigger', PART_META.outrigger);
+regPart('platform', PART_META.platform);
+for(var n=1;n<=3;n++){
+  regPart('arm'+n, subPartMeta(n, PART_META.arm, '号基本臂', 'Base Arm'));
+  regPart('short'+n, subPartMeta(n, PART_META.short, '号短臂', 'Short Arm'));
+  regPart('tbeam'+n, subPartMeta(n, PART_META.tbeam, '号T型梁', 'T-Beam'));
+  regPart('feed'+n, subPartMeta(n, PART_META.feed, '号推进梁', 'Feed'));
+  regPart('drill'+n, subPartMeta(n, PART_META.drill, '号凿岩机', 'Rock Drill'));
+  regPart('rod'+n, subPartMeta(n, PART_META.rod, '号钎杆钻头', 'Rod & Bit'));
+  regPart('boom'+n, boomMeta(n));
+}
+
+/* ================= 程序化建模 ================= */
+var machineRoot = new THREE.Group();
+scene.add(machineRoot);
+var clickable = [];
+var EXPLODABLES = []; /* 爆炸图动画对象 */
+
+function tag(group, pid){
+  var p = PART_MAP[pid];
+  p.group = group;
+  group.traverse(function(c){
+    if(c.isMesh){
+      if(c.userData.partId) return; /* 已被子部件占用 */
+      c.userData.partId = pid;
+      c.material = c.material.clone();
+      p.meshes.push(c);
+      clickable.push(c);
+    }
+  });
+}
+
+/* ---- 车体底盘（黄 + 蓝饰带） ---- */
+function buildChassis(){
+  var g = new THREE.Group();
+  machineRoot.add(g);
+  box(2.55, 0.95, 7.2, MAT.yellow, 0, 1.60, 0, g);        /* 主车架 */
+  box(2.72, 0.18, 7.1, MAT.yellowD, 0, 1.10, 0, g);       /* 侧裙 */
+  box(2.35, 0.55, 0.4, MAT.yellow, 0, 1.78, 3.3, g);      /* 前安装台 */
+  box(0.5, 0.9, 0.4, MAT.steelD, -1.05, 1.6, 3.3, g);
+  box(0.5, 0.9, 0.4, MAT.steelD, 1.05, 1.6, 3.3, g);
+  box(2.45, 0.45, 0.16, MAT.steelD, 0, 1.06, -3.66, g);   /* 后保险杠 */
+  box(0.22, 0.18, 0.09, MAT.white, -1.0, 1.06, 3.6, g);   /* 前灯 */
+  box(0.22, 0.18, 0.09, MAT.white, 1.0, 1.06, 3.6, g);
+  box(0.1, 0.42, 0.4, MAT.blue, -1.18, 1.6, 3.3, g);      /* 侧警示条（蓝） */
+  box(0.1, 0.42, 0.4, MAT.blue, 1.18, 1.6, 3.3, g);
+  box(2.56, 0.12, 7.1, MAT.blue, 0, 1.30, 0, g);          /* 底部蓝装饰带 */
+  tag(g,'chassis');
+  PART_MAP.chassis.labelPoint.set(0, 1.85, -0.5);
+  PART_MAP.chassis.focusPoint.set(0, 1.55, 0.2);
+}
+
+/* ---- 行走轮胎 ---- */
+function buildWheels(){
+  var g = new THREE.Group();
+  g.position.set(0, 0.55, 0);
+  machineRoot.add(g);
+  [[-1.28,-2.7],[1.28,-2.7],[-1.28,2.7],[1.28,2.7]].forEach(function(w){
+    cyl(0.55,0.55,0.52,28, MAT.rubber, w[0],0,w[1], g, {z:Math.PI/2});
+    cyl(0.30,0.30,0.56,18, MAT.steel,  w[0],0,w[1], g, {z:Math.PI/2});
+    cyl(0.10,0.10,0.58,10, MAT.chrome, w[0],0,w[1], g, {z:Math.PI/2});
+  });
+  tag(g,'wheels');
+  PART_MAP.wheels.labelPoint.set(0, 0.95, 1.4);
+  PART_MAP.wheels.focusPoint.set(0, 0.62, 1.0);
+}
+
+/* ---- 驾驶室（蓝白 + 黄顶） ---- */
+function buildCab(){
+  var g = new THREE.Group();
+  g.position.set(0.95, 2.05, 2.7);
+  machineRoot.add(g);
+  box(1.4, 1.5, 1.55, MAT.blue, 0, 0.6, 0, g);        /* 主体 */
+  box(1.2, 0.72, 0.05, MAT.glass, 0, 0.87, 0.79, g);  /* 前窗 */
+  box(0.05, 0.66, 1.28, MAT.glass, 0.71, 0.83, 0, g); /* 侧窗 */
+  box(1.14, 0.6, 0.05, MAT.glass, 0, 0.8, -0.79, g);  /* 后窗 */
+  box(1.4, 0.12, 1.55, MAT.yellow, 0, 1.43, 0, g);    /* 顶（黄） */
+  box(1.62, 0.08, 0.66, MAT.steel, 0, 1.74, 0.52, g); /* 防落石棚 */
+  box(0.09, 0.42, 0.09, MAT.steel, -0.65, 1.52, 0.3, g);
+  box(0.09, 0.42, 0.09, MAT.steel, 0.65, 1.52, 0.3, g);
+  box(0.68, 1.05, 0.04, MAT.white, -0.38, 0.6, 0.78, g); /* 门 */
+  tag(g,'cab');
+  PART_MAP.cab.labelPoint.set(1.5, 3.6, 2.8);
+  PART_MAP.cab.focusPoint.set(0.95, 2.3, 2.7);
+}
+
+/* ---- 动力·液压单元（蓝 + 黄油箱） ---- */
+function buildPower(){
+  var g = new THREE.Group();
+  g.position.set(0, 2.0, -2.3);
+  machineRoot.add(g);
+  box(1.8, 1.3, 1.9, MAT.blue, 0, 0.5, 0, g);        /* 机组 */
+  box(1.74, 0.55, 0.07, MAT.black, 0, 0.5, 0.97, g); /* 散热格栅 */
+  cyl(0.32, 0.32, 1.05, 18, MAT.yellow, -0.52, 1.05, 0.12, g); /* 液压油箱（黄） */
+  cyl(0.32, 0.32, 1.05, 18, MAT.yellow, 0.52, 1.05, 0.12, g);
+  cyl(0.07, 0.07, 0.95, 10, MAT.black, 0.58, 1.62, -0.6, g);  /* 排烟管 */
+  box(0.62, 0.07, 0.62, MAT.yellow, 0, 1.22, -0.1, g);  /* 顶盖 */
+  box(1.8, 0.1, 0.5, MAT.blueD, 0, 1.22, 0.55, g);
+  tag(g,'power');
+  PART_MAP.power.labelPoint.set(0, 3.3, -2.7);
+  PART_MAP.power.focusPoint.set(0, 2.3, -2.1);
+}
+
+/* ---- 稳定支腿（黄，4 根） ---- */
+function buildOutrigger(){
+  var g = new THREE.Group();
+  machineRoot.add(g);
+  function leg(s, z){
+    var lg = new THREE.Group();
+    lg.position.set(s*1.28, 0, z);
+    g.add(lg);
+    box(0.22, 1.2, 0.22, MAT.yellow, 0, 0.65, 0, lg);
+    box(0.6, 0.15, 0.44, MAT.steelD, 0, 0.06, 0, lg);
+    box(0.36, 0.3, 0.32, MAT.steel, 0, 1.38, 0, lg);
+    cyl(0.03, 0.03, 0.58, 10, MAT.chrome, s*0.07, 0.9, -0.13, lg);
+    EXPLODABLES.push({obj:lg, orig:lg.position.clone(),
+      dir:new THREE.Vector3(s*0.8,0.5,0.35*z/Math.abs(z)).normalize(), dist:1.9, extraZ:null});
+  }
+  leg(-1, 3.0); leg(1, 3.0);
+  leg(-1, -3.0); leg(1, -3.0);
+  tag(g,'outrigger');
+  PART_MAP.outrigger.labelPoint.set(-1.7, 1.4, 3.4);
+  PART_MAP.outrigger.focusPoint.set(0, 1.0, 3.1);
+}
+
+/* ---- 高空作业平台（升降柱 + 护栏 + 爬梯） ---- */
+function buildPlatform(){
+  var g = new THREE.Group();
+  g.position.set(0, 0, -0.3);
+  machineRoot.add(g);
+  var colL = new THREE.Group(); colL.position.set(-1.15, 0, 0); g.add(colL);
+  var colR = new THREE.Group(); colR.position.set(1.15, 0, 0); g.add(colR);
+  [colL, colR].forEach(function(col){
+    box(0.5, 1.6, 0.5, MAT.yellowD, 0, 2.35, 0, col);       /* 外套柱 */
+    box(0.36, 1.5, 0.36, MAT.yellow, 0, 2.35, 0, col);      /* 内柱 */
+    cyl(0.045, 0.045, 1.35, 10, MAT.chrome, 0, 2.35, -0.3, col);
+  });
+  var deck = new THREE.Group();
+  deck.position.y = 3.1;
+  g.add(deck);
+  EXPLODABLES.push({obj:deck, orig:deck.position.clone(), dir:new THREE.Vector3(0,1,0), dist:1.1, extraZ:null});
+  box(2.75, 0.1, 2.3, MAT.yellow, 0, 0.05, 0, deck);        /* 平台板 */
+  box(2.75, 0.06, 2.3, MAT.yellowD, 0, 0.0, 0, deck);
+  var HPLAT = 1.375;
+  function railSide(sx){
+    var d = 2.3;
+    box(0.05, 1.0, d, MAT.blue, sx, 0.55, 0, deck);
+    box(0.05, 0.06, d, MAT.blue, sx, 1.05, 0, deck);
+    box(0.05, 0.06, d, MAT.blue, sx, 0.55, 0, deck);
+  }
+  railSide(-HPLAT); railSide(HPLAT);
+  [0, 1].forEach(function(i){
+    var z = i ? 1.15 : -1.15;
+    box(2.75, 1.0, 0.05, MAT.blue, 0, 0.55, z, deck);
+    box(2.75, 0.06, 0.05, MAT.blue, 0, 1.05, z, deck);
+  });
+  box(2.75, 0.05, 0.05, MAT.blue, 0, 1.08, 1.15, deck);
+  box(2.75, 0.05, 0.05, MAT.blue, 0, 1.08, -1.15, deck);
+  for(var i=0;i<4;i++){
+    box(0.06, 0.04, 0.55, MAT.blueD, -1.42, 0.9 + i*0.5, 0.9, g);
+  }
+  box(0.06, 2.0, 0.06, MAT.blueD, -1.42, 1.0, 1.18, g);
+  box(0.06, 2.0, 0.06, MAT.blueD, -1.42, 1.0, 0.62, g);
+  tag(g,'platform');
+  PART_MAP.platform.labelPoint.set(0, 4.6, -0.3);
+  PART_MAP.platform.focusPoint.set(0, 3.4, -0.3);
+}
+
+/* ---- 液压管线（动力舱 → 前部与作业平台） ---- */
+function buildHoses(){
+  var g = new THREE.Group();
+  machineRoot.add(g);
+  var matHose = new THREE.MeshStandardMaterial({color:0x1F3A52, roughness:0.6, metalness:0.1});
+  [[-1.0],[1.0]].forEach(function(s){
+    var p1 = [s[0]*0.55, 2.15, -1.35];
+    var p2 = [s[0]*0.75, 2.0, 0.2];
+    var p3 = [s[0]*0.9, 2.15, 1.6];
+    var p4 = [s[0]*0.8, 2.35, 3.0];
+    hose([new THREE.Vector3(p1[0],p1[1],p1[2]),
+          new THREE.Vector3(p2[0],p2[1],p2[2]),
+          new THREE.Vector3(p3[0],p3[1],p3[2]),
+          new THREE.Vector3(p4[0],p4[1],p4[2])], 0.035, matHose, g);
+  });
+  hose([new THREE.Vector3(-0.4,2.2,-0.2), new THREE.Vector3(-0.4,2.6,0.1), new THREE.Vector3(-0.75,2.9,0.0), new THREE.Vector3(-1.0,3.0,0.0)], 0.03, matHose, g);
+}
+
+/* ---- 钻臂（基本臂 → 短臂 → T型梁 → 推进梁） ---- */
+function buildBoom(cfg){
+  var g = new THREE.Group();
+  g.position.set(cfg.x, cfg.y, cfg.z);
+  machineRoot.add(g);
+  var n = cfg.n;
+  var rodState = {v:0};
+  /* 回转座 + 基座 */
+  box(0.58, 0.52, 0.58, MAT.steelD, 0, -0.28, 0, g);
+  cyl(0.31, 0.36, 0.44, 20, MAT.steelD, 0, 0.02, 0, g);
+  /* 基本臂（臂架组第一段） */
+  var arm = new THREE.Group();
+  arm.position.y = 0.25;
+  g.add(arm);
+  box(0.26, 0.28, 1.8, MAT.yellow, 0, 0.02, 1.0, arm);
+  cyl(0.034, 0.034, 1.2, 10, MAT.chrome, 0.18, -0.06, 0.66, arm, {z:0.3});
+  cyl(0.034, 0.034, 1.2, 10, MAT.chrome, -0.18, -0.06, 0.66, arm, {z:-0.3});
+  /* 短臂（第二段 + 关节） */
+  var j2 = new THREE.Group();
+  j2.position.set(0, 0.04, 2.05);
+  arm.add(j2);
+  cyl(0.12, 0.12, 0.34, 14, MAT.steelD, 0, 0, 0, j2, {x:Math.PI/2});
+  box(0.21, 0.23, 1.6, MAT.yellow, 0, 0.04, 0.88, j2);
+  /* T型梁（第三段，承载推进梁） */
+  var tbeam = new THREE.Group();
+  tbeam.position.set(0, 0.06, 1.55);
+  j2.add(tbeam);
+  box(0.15, 0.3, 0.18, MAT.yellowD, 0, 0.14, 0, tbeam);
+  box(0.36, 0.1, 0.12, MAT.steel, 0, 0.3, 0.03, tbeam);
+  /* 推进梁 */
+  var feed = new THREE.Group();
+  feed.position.set(0, 0.26, 1.9);
+  j2.add(feed);
+  box(0.36, 0.13, 2.7, MAT.steelD, 0, 0.02, 1.4, feed);
+  box(0.17, 0.32, 2.7, MAT.blue, 0, 0.13, 1.4, feed);
+  box(0.32, 0.24, 0.52, MAT.steel, 0, 0.28, 0.36, feed);
+  /* 凿岩机滑架 */
+  var drill = new THREE.Group();
+  drill.position.set(0, 0.13, 0.58);
+  feed.add(drill);
+  box(0.38, 0.44, 0.95, MAT.yellowD, 0, 0.21, 0, drill);
+  box(0.32, 0.38, 0.22, MAT.steel, 0, 0.21, 0.52, drill);
+  cyl(0.09, 0.09, 0.22, 12, MAT.chrome, 0, 0.15, 0.66, drill, {x:Math.PI/2});
+  /* 钎杆 + 钻头 */
+  var rod = new THREE.Group();
+  rod.position.set(0, 0.15, 0.76);
+  drill.add(rod);
+  cyl(0.028, 0.028, 1.55, 10, MAT.chrome, 0, 0, 0.78, rod, {x:Math.PI/2});
+  var bit = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.17, 12), MAT.chrome);
+  bit.rotation.x = Math.PI/2;
+  bit.position.set(0, 0, 1.62);
+  bit.castShadow = true;
+  rod.add(bit);
+  /* 软管到凿岩机 */
+  hose([new THREE.Vector3(0.2,0.5,0.3), new THREE.Vector3(0.16,0.42,0.9), new THREE.Vector3(0.1,0.32,1.5)], 0.022, new THREE.MeshStandardMaterial({color:0x1F3A52,roughness:0.6}), arm);
+  /* 部件标注（先子后父） */
+  tag(rod, 'rod'+n);
+  tag(drill, 'drill'+n);
+  tag(feed, 'feed'+n);
+  tag(tbeam, 'tbeam'+n);
+  tag(j2, 'short'+n);
+  tag(arm, 'arm'+n);
+  tag(g, 'boom'+n);
+  PART_MAP['arm'+n].focusPoint.set(cfg.x, cfg.y+1.0, cfg.z+2.6);
+  PART_MAP['short'+n].focusPoint.set(cfg.x, cfg.y+1.05, cfg.z+3.4);
+  PART_MAP['tbeam'+n].focusPoint.set(cfg.x, cfg.y+1.1, cfg.z+4.1);
+  PART_MAP['feed'+n].focusPoint.set(cfg.x, cfg.y+0.95, cfg.z+4.4);
+  PART_MAP['drill'+n].focusPoint.set(cfg.x, cfg.y+1.05, cfg.z+4.9);
+  PART_MAP['rod'+n].focusPoint.set(cfg.x, cfg.y+1.15, cfg.z+5.6);
+  PART_MAP['boom'+n].labelPoint.set(cfg.lx, cfg.ly, cfg.lz);
+  PART_MAP['boom'+n].focusPoint.set(cfg.x, cfg.y+1.25, cfg.z+2.2);
+  /* 爆炸图 */
+  EXPLODABLES.push({obj:g, orig:g.position.clone(), dir:cfg.edir, dist:cfg.edist, extraZ:null});
+  EXPLODABLES.push({obj:tbeam, orig:tbeam.position.clone(), dir:new THREE.Vector3(0,0.12,1).normalize(), dist:0.7, extraZ:null});
+  EXPLODABLES.push({obj:feed, orig:feed.position.clone(), dir:new THREE.Vector3(0,0.18,1).normalize(), dist:1.2, extraZ:null});
+  EXPLODABLES.push({obj:drill, orig:drill.position.clone(), dir:new THREE.Vector3(0,0.12,1).normalize(), dist:0.9, extraZ:null});
+  EXPLODABLES.push({obj:rod, orig:rod.position.clone(), dir:new THREE.Vector3(0,0,1), dist:1.3, extraZ:function(){return rodState.v;}});
+  return {group:g, arm:arm, rodState:rodState};
+}
+
+var BOOM_CFG = [
+  {n:1, x:-1.16, y:2.42, z:3.42, edir:new THREE.Vector3(-0.5,0.7,0.5).normalize(), edist:2.7, lx:-2.0, ly:3.5, lz:4.2},
+  {n:2, x:0,     y:2.95, z:3.42, edir:new THREE.Vector3(0,0.85,0.5).normalize(),  edist:3.0, lx:0,    ly:3.9, lz:4.0},
+  {n:3, x:1.16,  y:2.42, z:3.42, edir:new THREE.Vector3(0.5,0.7,0.5).normalize(), edist:2.7, lx:2.0,  ly:3.5, lz:4.2}
+];
+var booms = BOOM_CFG.map(function(cfg){
+  var b = buildBoom(cfg);
+  b.stowedAngle = 0.06;
+  b.workAngle = -0.34;
+  b.demoOffset = cfg.n * 1.85;
+  b.demoPeriod = 5.8;
+  b.arm.rotation.x = b.stowedAngle;
+  return b;
+});
+
+buildChassis();
+buildWheels();
+buildCab();
+buildPower();
+buildOutrigger();
+buildPlatform();
+buildHoses();
+
+/* ================= 拾取 / 悬停 ================= */
+var raycaster = new THREE.Raycaster();
+var ndc = new THREE.Vector2();
+function pickAt(clientX, clientY){
+  var r = renderer.domElement.getBoundingClientRect();
+  ndc.x = ((clientX - r.left)/r.width)*2 - 1;
+  ndc.y = -((clientY - r.top)/r.height)*2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  var hits = raycaster.intersectObjects(clickable, false);
+  return hits.length ? hits[0].object.userData.partId : null;
+}
+var hoverId = null, selId = null;
+var downX = 0, downY = 0;
+renderer.domElement.addEventListener('pointermove', function(ev){
+  hoverId = pickAt(ev.clientX, ev.clientY);
+  renderer.domElement.style.cursor = hoverId ? 'pointer' : 'grab';
+});
+renderer.domElement.addEventListener('pointerleave', function(){ hoverId = null; });
+renderer.domElement.addEventListener('pointerdown', function(ev){
+  downX = ev.clientX; downY = ev.clientY;
+  focusTarget = null; /* 用户开始自由旋转时取消自动聚焦 */
+});
+renderer.domElement.addEventListener('pointerup', function(ev){
+  var dx = ev.clientX - downX, dy = ev.clientY - downY;
+  if(dx*dx + dy*dy < 64){
+    var id = pickAt(ev.clientX, ev.clientY);
+    selectPart(id, true);
+    if(id) reportAction('click', {partId:id});
+  }
+});
+
+/* ================= 信息面板 ================= */
+function renderInfo(id){
+  var panel = document.getElementById('infoPanel');
+  if(!id){ panel.classList.remove('open'); return; }
+  var p = PART_MAP[id];
+  document.getElementById('infoTag').textContent = p.tag;
+  document.getElementById('infoTitle').textContent = p.name;
+  document.getElementById('infoEn').textContent = p.en.toUpperCase();
+  document.getElementById('infoDesc').textContent = p.desc;
+  var s = document.getElementById('infoSpecs');
+  s.innerHTML = '';
+  p.specs.forEach(function(r){
+    var row = document.createElement('div');
+    row.className = 'spec-row';
+    var k = document.createElement('span'); k.className='k'; k.textContent = r[0];
+    var v = document.createElement('span'); v.className='v'; v.textContent = r[1];
+    row.appendChild(k); row.appendChild(v);
+    s.appendChild(row);
+  });
+  panel.classList.add('open');
+}
+
+/* ================= 选择 / 聚焦 / 高亮 ================= */
+var focusTarget = null;
+function selectPart(id, focus){
+  selId = id || null;
+  renderInfo(selId);
+  updateListSelection();
+  if(id && focus && PART_MAP[id]) focusTarget = PART_MAP[id].focusPoint.clone();
+}
+var EM_SEL = new THREE.Color(0xF5B82E);
+var EM_HOV = new THREE.Color(0x3EA8FF);
+var EM_NONE = new THREE.Color(0x000000);
+function updateEmissive(dt){
+  var k = Math.min(1, dt*10);
+  PARTS.forEach(function(p){
+    var c = EM_NONE, inten = 0;
+    if(p.id === selId){ c = EM_SEL; inten = 0.55; }
+    else if(p.id === hoverId){ c = EM_HOV; inten = 0.35; }
+    p.meshes.forEach(function(m){
+      m.material.emissive.lerp(c, k);
+      m.material.emissiveIntensity = inten;
+    });
+  });
+}
+
+/* ================= 部件清单（27 项） ================= */
+var PANEL_GROUPS = [
+  {title:'车体系统', items:['chassis','wheels','cab','power','outrigger','platform']},
+  {title:'工作装置', items:[
+    ['boom1',['arm1','short1','tbeam1','feed1','drill1','rod1']],
+    ['boom2',['arm2','short2','tbeam2','feed2','drill2','rod2']],
+    ['boom3',['arm3','short3','tbeam3','feed3','drill3','rod3']]
+  ]}
+];
+function rowHTML(p, kid){
+  return '<button class="p-item'+(kid?' kid':'')+'" data-id="'+p.id+'">'+
+    '<span class="idx">'+String(p.number).padStart(2,'0')+'</span>'+
+    '<span class="chip" style="background:'+p.color+'"></span>'+
+    '<span class="nm">'+p.name+'</span></button>';
+}
+function buildPanel(){
+  var list = document.getElementById('partsList');
+  var html = '', num = 0;
+  PANEL_GROUPS.forEach(function(grp){
+    html += '<div class="grp-label">'+grp.title+'</div>';
+    grp.items.forEach(function(it){
+      var id = Array.isArray(it) ? it[0] : it;
+      var p = PART_MAP[id];
+      p.number = ++num;
+      html += rowHTML(p, false);
+      if(Array.isArray(it)){
+        it[1].forEach(function(kid){
+          var kp = PART_MAP[kid];
+          kp.number = ++num;
+          html += rowHTML(kp, true);
+        });
+      }
+    });
+  });
+  list.innerHTML = html;
+  document.getElementById('partsCount').textContent = num + ' 个部件';
+  list.querySelectorAll('.p-item').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.getAttribute('data-id');
+      selectPart(id, true); closeDrawer();
+      reportAction('click', {partId:id});
+    });
+  });
+}
+function updateListSelection(){
+  document.querySelectorAll('#partsList .p-item').forEach(function(btn){
+    btn.classList.toggle('sel', btn.getAttribute('data-id') === selId);
+  });
+}
+
+/* ================= 3D 标注标签 ================= */
+var labelsEl = document.getElementById('labels');
+var labelsOn = true;
+var labelEls = [];
+function buildLabels(){
+  var ids = ['chassis','wheels','cab','power','outrigger','platform','boom1','boom2','boom3'];
+  ids.forEach(function(id){
+    var p = PART_MAP[id];
+    var el = document.createElement('div');
+    el.className = 'tag';
+    var dot = document.createElement('span'); dot.className='dot'; dot.style.background = p.color;
+    var idx = document.createElement('span'); idx.className='t-idx'; idx.textContent = String(p.number).padStart(2,'0');
+    var nm = document.createElement('span'); nm.textContent = p.name;
+    el.appendChild(dot); el.appendChild(idx); el.appendChild(nm);
+    labelsEl.appendChild(el);
+    labelEls.push({el:el, p:p});
+  });
+}
+var _v = new THREE.Vector3();
+function updateLabels(){
+  if(!labelsOn) return;
+  var w = window.innerWidth, h = window.innerHeight;
+  labelEls.forEach(function(L){
+    _v.copy(L.p.labelPoint).project(camera);
+    if(_v.z > 1){ L.el.style.opacity = 0; return; }
+    var x = (_v.x*0.5+0.5)*w, y = (-_v.y*0.5+0.5)*h;
+    L.el.style.left = x+'px';
+    L.el.style.top = y+'px';
+    L.el.style.opacity = (explodeOn || (selId && selId !== L.p.id)) ? 0.3 : 1;
+  });
+}
+
+/* ================= 顶部控制按钮 ================= */
+var explodeOn = false, demoOn = false;
+var btnLabels  = document.getElementById('btnLabels');
+var btnExplode = document.getElementById('btnExplode');
+var btnDemo    = document.getElementById('btnDemo');
+var btnLearn   = document.getElementById('btnLearn');
+var btnReset   = document.getElementById('btnReset');
+btnLabels.addEventListener('click', function(){
+  labelsOn = !labelsOn;
+  btnLabels.classList.toggle('on', labelsOn);
+  btnLabels.setAttribute('aria-pressed', String(labelsOn));
+  labelsEl.classList.toggle('hide', !labelsOn);
+});
+btnExplode.addEventListener('click', function(){
+  explodeOn = !explodeOn;
+  btnExplode.classList.toggle('on', explodeOn);
+  btnExplode.setAttribute('aria-pressed', String(explodeOn));
+  reportAction('explode');
+});
+btnDemo.addEventListener('click', function(){
+  demoOn = !demoOn;
+  btnDemo.classList.toggle('on', demoOn);
+  btnDemo.setAttribute('aria-pressed', String(demoOn));
+  reportAction('demo');
+});
+btnLearn.addEventListener('click', function(){ openLearn(); });
+btnReset.addEventListener('click', function(){ resetView(); reportAction('reset'); });
+document.getElementById('infoClose').addEventListener('click', function(){ selectPart(null); });
+
+/* ================= 移动端抽屉 ================= */
+var partsPanel = document.getElementById('partsPanel');
+var scrim = document.getElementById('scrim');
+function closeDrawer(){
+  partsPanel.classList.remove('open');
+  scrim.classList.remove('show');
+}
+document.getElementById('menuToggle').addEventListener('click', function(){
+  var open = partsPanel.classList.toggle('open');
+  scrim.classList.toggle('show', open);
+});
+scrim.addEventListener('click', closeDrawer);
+
+/* ================= 视角复位 / 开场动画 ================= */
+var resetT = 1;
+var resetFromPos = new THREE.Vector3(), resetFromTgt = new THREE.Vector3();
+var resetToPos = new THREE.Vector3(17, 10.5, 18), resetToTgt = new THREE.Vector3(0, 2.0, 0.6);
+function resetView(){
+  resetFromPos.copy(camera.position);
+  resetFromTgt.copy(controls.target);
+  resetT = 0;
+}
+var INTRO_FROM = new THREE.Vector3(30, 18, 34);
+var INTRO_TO = new THREE.Vector3(17, 10.5, 18);
+var INTRO_T_FROM = new THREE.Vector3(0, 1.4, 0);
+var INTRO_T_TO = new THREE.Vector3(0, 2.0, 0.6);
+var introDur = reduceMotion ? 0 : 4.4;
+var introT = 0, introDone = false;
+if(reduceMotion){
+  camera.position.copy(INTRO_TO);
+  controls.target.copy(INTRO_T_TO);
+  booms.forEach(function(b){ b.arm.rotation.x = b.workAngle; b.rodState.v = 0; });
+  introDone = true;
+} else {
+  camera.position.copy(INTRO_FROM);
+  controls.target.copy(INTRO_T_FROM);
+}
+function easeInOut(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+function stepIntro(dt){
+  introT += dt;
+  var k = Math.min(introT/introDur, 1), e = easeInOut(k);
+  camera.position.lerpVectors(INTRO_FROM, INTRO_TO, e);
+  controls.target.lerpVectors(INTRO_T_FROM, INTRO_T_TO, e);
+  booms.forEach(function(b){
+    b.arm.rotation.x = b.stowedAngle + (b.workAngle - b.stowedAngle)*e;
+    b.rodState.v = 0.3*e;
+  });
+  if(k >= 1){
+    introDone = true;
+    controls.enabled = true;
+  }
+}
+
+/* ================= 凿岩演示 / 爆炸图动画 ================= */
+var E = 0;
+function stepDemo(dt, t){
+  booms.forEach(function(b){
+    if(demoOn){
+      var cyc = b.demoPeriod;
+      var p = ((t + b.demoOffset) % cyc)/cyc;
+      var arm = b.workAngle, adv = 0;
+      if(p < 0.16){ arm = b.workAngle - 0.10*easeInOut(p/0.16); }
+      else if(p < 0.30){ arm = b.workAngle - 0.10; adv = 1.05*easeInOut((p-0.16)/0.14); }
+      else if(p < 0.55){ arm = b.workAngle - 0.10; adv = 1.05; }
+      else if(p < 0.69){ arm = b.workAngle - 0.10; adv = 1.05*(1 - easeInOut((p-0.55)/0.14)); }
+      else if(p < 0.84){ arm = b.workAngle - 0.10*(1 - easeInOut((p-0.69)/0.15)); }
+      b.arm.rotation.x = arm;
+      b.rodState.v = adv;
+    } else {
+      b.arm.rotation.x += (b.workAngle - b.arm.rotation.x)*Math.min(1, dt*6);
+      b.rodState.v += (0 - b.rodState.v)*Math.min(1, dt*6);
+    }
+  });
+}
+function stepExplode(dt){
+  var target = explodeOn ? 1 : 0;
+  E += (target - E)*Math.min(1, dt*4.5);
+  EXPLODABLES.forEach(function(x){
+    x.obj.position.copy(x.orig).addScaledVector(x.dir, x.dist*E);
+    if(x.extraZ) x.obj.position.z += x.extraZ();
+  });
+}
+
+/* ================= 渲染循环 ================= */
+var clock = new THREE.Clock();
+var running = true, raf = null;
+function animate(){
+  if(!running) return;
+  raf = requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.05);
+  var t = clock.elapsedTime;
+  if(!introDone) stepIntro(dt);
+  stepDemo(dt, t);
+  stepExplode(dt);
+  updateEmissive(dt);
+  updateLabels();
+  if(resetT < 1){
+    resetT = Math.min(1, resetT + dt/0.9);
+    var re = easeInOut(resetT);
+    camera.position.lerpVectors(resetFromPos, resetToPos, re);
+    controls.target.lerpVectors(resetFromTgt, resetToTgt, re);
+  }
+  if(focusTarget && introDone){
+    controls.target.lerp(focusTarget, 1 - Math.pow(0.0004, dt));
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+window.addEventListener('resize', function(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){ running = false; cancelAnimationFrame(raf); }
+  else { running = true; clock.getDelta(); animate(); }
+});
+
+/* ================= 前后端交互（双模式：服务端 API / 本地存储） ================= */
+var BACKEND = {
+  mode: 'local',            /* 'server' | 'local' */
+  probeDone: false,
+  LS_KEY: 'jumbo_learning_state_v2'
+};
+function loadLS(){
+  try{ return JSON.parse(localStorage.getItem(BACKEND.LS_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveLS(s){
+  try{ localStorage.setItem(BACKEND.LS_KEY, JSON.stringify(s)); }catch(e){}
+}
+function reportAction(action, opt){
+  opt = opt || {};
+  var body = {
+    action: action,
+    partId: opt.partId || '',
+    ms: opt.ms || 0,
+    ts: Date.now()
+  };
+  if(BACKEND.mode === 'server'){
+    fetch('/api/interactions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }).catch(function(){});
+    return;
+  }
+  var s = loadLS();
+  if(action === 'session'){ s.sessions = (s.sessions||0) + 1; }
+  else if(action === 'click' && body.partId){
+    s.clicks = s.clicks || {};
+    s.clicks[body.partId] = (s.clicks[body.partId]||0) + 1;
+  }
+  else if(action === 'demo'){ s.demo_plays = (s.demo_plays||0) + 1; }
+  else if(action === 'explode'){ s.explode_plays = (s.explode_plays||0) + 1; }
+  else if(action === 'reset'){ s.view_resets = (s.view_resets||0) + 1; }
+  else if(action === 'time'){ s.total_time_ms = (s.total_time_ms||0) + Math.max(0, body.ms||0); }
+  saveLS(s);
+}
+var lastTickTs = Date.now();
+function startTimeLoop(){
+  lastTickTs = Date.now();
+  setInterval(function(){
+    var now = Date.now();
+    var ms = now - lastTickTs;
+    lastTickTs = now;
+    reportAction('time', {ms: ms});
+  }, 30000);
+}
+function probeBackend(){
+  var done = false;
+  function finish(){
+    if(done) return; done = true;
+    BACKEND.probeDone = true;
+    updateApiChip();
+    reportAction('session');
+    startTimeLoop();
+    if(BACKEND.mode === 'server'){
+      fetch('/api/params', {cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+        if(j && j.drill_boom) PARAMS = j;
+      }).catch(function(){});
+      fetch('/api/knowledge', {cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+        if(j && j.structure) KNOWLEDGE = j;
+      }).catch(function(){});
+    }
+  }
+  /* 直接打开本地文件（file://）时跳过探测，直接进入本地模式，避免跨源请求报错 */
+  if(location.protocol === 'file:'){ BACKEND.mode = 'local'; finish(); return; }
+  var timer = setTimeout(finish, 2500);
+  fetch('/api/health', {method:'GET', cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(j){ if(j && j.ok){ BACKEND.mode = 'server'; } })
+    .catch(function(){})
+    .then(function(){ clearTimeout(timer); finish(); });
+}
+function updateApiChip(){
+  var chip = document.getElementById('apiChip');
+  var txt = document.getElementById('apiChipTxt');
+  if(BACKEND.mode === 'server'){
+    chip.classList.add('on'); chip.classList.remove('off');
+    txt.textContent = '已连接教学服务';
+  } else {
+    chip.classList.add('off'); chip.classList.remove('on');
+    txt.textContent = '本地模式 · 记录存于本机';
+  }
+}
+
+/* ================= 学习资料面板 ================= */
+var learnPanel = document.getElementById('learnPanel');
+function openLearn(){
+  learnPanel.classList.add('open');
+  learnPanel.setAttribute('aria-hidden', 'false');
+  renderParams(); renderKnowledge(); renderStats();
+}
+function closeLearn(){
+  learnPanel.classList.remove('open');
+  learnPanel.setAttribute('aria-hidden', 'true');
+}
+document.getElementById('learnClose').addEventListener('click', closeLearn);
+document.querySelectorAll('.lp-tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.lp-tab').forEach(function(t){ t.classList.remove('on'); });
+    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('on'); });
+    tab.classList.add('on');
+    document.getElementById('pane-' + tab.getAttribute('data-tab')).classList.add('on');
+  });
+});
+function renderParams(){
+  var el = document.getElementById('pane-params');
+  var html = '';
+  Object.keys(PARAMS).forEach(function(k){
+    var g = PARAMS[k];
+    html += '<div class="pgroup"><div class="pg-title">'+g.title+'</div><table>';
+    g.items.forEach(function(r){
+      html += '<tr><td class="k">'+r[0]+'</td><td class="v">'+r[1]+'</td></tr>';
+    });
+    html += '</table>'+(g.note ? '<div class="pg-note">'+g.note+'</div>' : '')+'</div>';
+  });
+  el.innerHTML = html;
+}
+function renderKnowledge(){
+  var el = document.getElementById('pane-knowledge');
+  var html = '';
+  Object.keys(KNOWLEDGE).forEach(function(k){
+    var g = KNOWLEDGE[k];
+    html += '<div class="kgroup"><div class="kg-title">'+g.title+'</div><ul>';
+    g.points.forEach(function(p){ html += '<li>'+p+'</li>'; });
+    html += '</ul></div>';
+  });
+  el.innerHTML = html;
+}
+function fmtDuration(ms){
+  if(!ms) return '0 分';
+  var s = Math.round(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h ? (h+' 时 '+m+' 分') : (m+' 分 '+(s%60)+' 秒');
+}
+function renderStats(){
+  var el = document.getElementById('pane-stats');
+  if(BACKEND.mode === 'server'){
+    fetch('/api/interactions', {cache:'no-store'}).then(function(r){ return r.json(); }).then(function(j){
+      el.innerHTML = statsHTML(j.state, j.top || [], true);
+    }).catch(function(){
+      el.innerHTML = statsHTML(null, [], false);
+    });
+  } else {
+    var s = loadLS();
+    var top = Object.keys(s.clicks || {}).map(function(id){
+      return {id:id, count:s.clicks[id]};
+    }).sort(function(a,b){ return b.count - a.count; }).slice(0, 8);
+    el.innerHTML = statsHTML({
+      sessions:s.sessions||0, demo_plays:s.demo_plays||0, explode_plays:s.explode_plays||0,
+      view_resets:s.view_resets||0, total_time_ms:s.total_time_ms||0,
+      click_total:top.reduce(function(a,b){ return a+b.count; }, 0)
+    }, top, false);
+  }
+}
+function statsHTML(st, top, fromServer){
+  if(!st || !(st.sessions || st.click_total || st.demo_plays || st.explode_plays || st.view_resets || st.total_time_ms)){
+    return '<div class="stat-empty">还没有学习记录。<br>试试：点击模型部件、播放凿岩演示、切换爆炸图——行为会自动记录。</div>';
+  }
+  var cards = [
+    ['会话次数', st.sessions], ['演示次数', st.demo_plays], ['爆炸图', st.explode_plays],
+    ['视角复位', st.view_resets], ['学习时长', fmtDuration(st.total_time_ms)], ['部件点击', st.click_total]
+  ];
+  var html = '<div class="stat-grid">';
+  cards.forEach(function(c){
+    html += '<div class="stat-card"><div class="num">'+c[1]+'</div><div class="lbl">'+c[0]+'</div></div>';
+  });
+  html += '</div>';
+  var max = 1;
+  top.forEach(function(t){ if(t.count > max) max = t.count; });
+  if(top && top.length){
+    html += '<div class="kgroup"><div class="kg-title">部件点击排行</div>'+
+      '<div class="rank-head"><span class="rk">#</span><span class="rn">部件</span><span class="rv">次数</span></div>';
+    top.forEach(function(t, i){
+      var nm = (PART_MAP[t.id] && PART_MAP[t.id].name) ? PART_MAP[t.id].name : t.id;
+      html += '<div class="rank-row"><span class="rk">'+(i+1)+'</span><span class="rn">'+nm+'</span>'+
+        '<span class="bar"><i style="width:'+Math.max(8, Math.round(t.count/max*100))+'%"></i></span>'+
+        '<span class="rv">'+t.count+'</span></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div class="stat-mode">'+
+    (fromServer ? '<b>服务端模式</b>：学习数据由本机教学服务（server.py）统一保存，同一台服务器上所有访问者的记录会合并统计。' :
+                 '<b>本地模式</b>：当前为静态/离线环境，学习数据保存在当前浏览器（localStorage），换设备或清缓存会清空。')+
+    '</div>';
+  return html;
+}
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ selectPart(null); closeDrawer(); closeLearn(); }
+});
+
+/* ================= 初始化 ================= */
+function hideSplash(){
+  var s = document.getElementById('splash');
+  if(s && !s.classList.contains('done')){
+    s.classList.add('done');
+    setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 650);
+  }
+}
+try{
+  buildPanel();
+  buildLabels();
+  labelsEl.classList.remove('hide');
+  renderer.render(scene, camera);
+  document.body.classList.add('ready');
+  hideSplash();
+  animate();
+  probeBackend();
+  window.__JUMBO_API = {
+    get mode(){ return BACKEND.mode; },
+    getContext: function(){
+      return { parts: PARTS || [], params: PARAMS || {}, knowledge: KNOWLEDGE || {} };
+    }
+  };
+  window.__JUMBO_READY = true;
+}catch(err){
+  console.error(err);
+  showErr(err.message);
+}
+})();
+</script>
+<a href="./index.html" id="backHome" style="position:fixed;top:14px;left:14px;z-index:99999;background:rgba(21,26,32,0.78);color:#fff;border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:7px 16px;font-size:13px;text-decoration:none;font-family:'Microsoft YaHei',Arial,sans-serif;backdrop-filter:blur(4px);box-shadow:0 2px 10px rgba(0,0,0,0.3);">← 返回平台首页</a>
+</body>
+</html>

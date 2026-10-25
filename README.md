@@ -27,6 +27,8 @@ python server.py
 - **学习资料面板**：技术参数 / 知识要点（结构原理、工作原理、装配要点、维护要点）/ 学习数据（统计卡片 + 部件点击排行）
 - **前后端双模式**：服务端模式（本地 server.py）与本地模式（静态 / GitHub Pages 自动降级为浏览器本地存储）自动切换，页面右下角显示当前模式
 - **AI 教学助教（DeepSeek）**：内置教学知识驱动的问答助教；本地模式走 `server.py /api/chat`，在线模式走 Cloudflare Worker 代理，API Key 始终保存在服务端，不会暴露到前端
+- **学练考一体化**：统一入口（`confirm.html` 确认书，阅读拉到底自动进入平台）→ 平台主页；所有「学员登录 / 教员入口」入口均指向同一确认书流程。考核评估内置「实操模拟考核（SOP 六步情景题，规范度/精准度/效率/安全四维度评分）」与「正式考核（理论题库限时作答）」两种模式，成绩实时接入后台
+- **教员后台（个性化报告）**：`teacher.html` 提供学员列表、考核记录与学情概览；可一键生成个人学习报告 / 班级学情分析 / 平台教学质量报告（服务端模式由 DeepSeek 智能体结合考核数据即时生成，静态模式可用模板或云端 AI 代理生成）
 
 ## 架构说明
 
@@ -53,6 +55,12 @@ AI 教学助教同样走双通道：服务端模式下前端调用 `/api/chat`�
 | GET | `/api/interactions` | 学习数据统计 |
 | POST | `/api/interactions` | 上报学习行为 `{action, partId?, ms?, ts?}` |
 | POST | `/api/chat` | AI 教学助教：转发对话到 DeepSeek `{messages, model?, max_tokens?}` |
+| GET | `/api/users` | 学员列表（姓名/班级） |
+| POST | `/api/users` | 登记学员 `{name, cls}` |
+| GET | `/api/assessments` | 全部考核记录 |
+| POST | `/api/assessments` | 上报考核成绩 `{name, cls, type, score, dims, ...}` |
+| GET | `/api/teacher/summary` | 教员后台学情概览（学员数/平均分等） |
+| POST | `/api/report` | 生成个性化报告 `{type: personal|class|quality, target}`（DeepSeek 智能体生成） |
 
 ## AI 教学助教（DeepSeek）
 
@@ -80,8 +88,11 @@ AI 教学助教同样走双通道：服务端模式下前端调用 `/api/chat`�
 
 ```
 jumbo-drill-teaching/
-├── index.html           教学主页面（单文件自包含，Three.js 走 CDN，含 AI 助教）
-├── server.py            本地教学服务（Python 标准库，零依赖，含 /api/chat 代理）
+├── index.html           平台主页面（统一入口 + 学练考一体化 + 考核评估）
+├── confirm.html         用户使用服务确认书（阅读进度拉到底自动进入平台）
+├── teacher.html         教员后台（学情概览 + 个性化报告生成）
+├── sim3d.html           三维模拟实操（3D 交互教学主页面，含 AI 助教）
+├── server.py            本地教学服务（Python 标准库，零依赖，含 /api/chat 与报告生成）
 ├── ai-proxy.js          Cloudflare Worker 云端代理（在线模式部署用，不含 Key）
 ├── start_server.bat     一键启动脚本
 ├── deepseek_key.txt     本地 DeepSeek Key（自行创建，已被 .gitignore 忽略）

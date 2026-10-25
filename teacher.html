@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23005BAC'/%3E%3Ctext x='32' y='43' font-size='26' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ECR%3C/text%3E%3C/svg%3E">
+    <title>教员后台 · 三臂凿岩台车教学交互式智能体平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent !important; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .topbar {
+            background: #005BAC; color: #fff; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 3%; height: 64px; flex-wrap: wrap;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 12px; }
+        .topbar-logo {
+            width: 40px; height: 40px; background: #fff; color: #005BAC; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px;
+        }
+        .topbar-title { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+        .topbar-sub { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+        .topbar-actions { display: flex; gap: 10px; }
+        .topbar-btn {
+            display: inline-block; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer;
+            text-decoration: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.1); transition: all .2s;
+        }
+        .topbar-btn:hover { background: rgba(255,255,255,0.25); }
+        .topbar-btn.solid { background: #fff; color: #005BAC; border-color: #fff; font-weight: bold; }
+
+        .mode-banner { padding: 10px 3%; font-size: 13px; color: #5a6b7f; background: #eef4fb; border-bottom: 1px solid #dbe7f3; }
+        .mode-banner b { color: #005BAC; }
+
+        .layout { flex: 1; width: 100%; max-width: 1500px; margin: 26px auto; padding: 0 3%; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+        .panel { background: #fff; border-radius: 12px; box-shadow: 0 3px 14px rgba(0,61,121,0.07); padding: 24px 26px; border: 1px solid #e6eef7; }
+        .panel-title { font-size: 19px; color: #005BAC; font-weight: bold; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #eef3f8; position: relative; }
+        .panel-title::after { content: ''; position: absolute; left: 0; bottom: -1px; width: 60px; height: 3px; background: #005BAC; }
+
+        .t-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+        .t-card { background: #f5f9fd; border: 1px solid #e2ebf5; border-radius: 10px; padding: 16px 12px; text-align: center; }
+        .t-num { font-size: 26px; font-weight: bold; color: #005BAC; }
+        .t-label { font-size: 12px; color: #6b7d90; margin-top: 4px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #e2ebf5; padding: 8px 10px; text-align: left; }
+        th { background: #f2f7fc; color: #005BAC; font-weight: bold; white-space: nowrap; }
+        tr:nth-child(even) td { background: #fafcff; }
+        .sub-h { font-size: 15px; color: #003D79; font-weight: bold; margin: 18px 0 10px; }
+        .empty-tip { color: #8a99a8; font-size: 13px; text-align: center; padding: 20px 0; }
+        .scroll-wrap { max-height: 300px; overflow: auto; }
+
+        .report-btns { display: flex; flex-direction: column; gap: 14px; }
+        .rpt-item { border: 1px solid #e2ebf5; border-radius: 10px; padding: 16px 18px; background: #fafcff; }
+        .rpt-item h4 { color: #003D79; font-size: 15px; margin-bottom: 6px; }
+        .rpt-item p { font-size: 12px; color: #6b7d90; margin-bottom: 10px; line-height: 1.7; }
+        .rpt-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .rpt-row select, .rpt-row input {
+            flex: 1; min-width: 160px; padding: 9px 12px; border: 1px solid #c9d9e8; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff;
+        }
+        .btn-primary {
+            display: inline-block; background: #005BAC; color: #fff; border: none; border-radius: 6px; padding: 10px 22px;
+            font-size: 14px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: all .2s; font-family: inherit;
+        }
+        .btn-primary:hover { background: #004a92; }
+        .btn-primary:disabled { background: #a9bfd6; cursor: not-allowed; }
+        .btn-ghost {
+            display: inline-block; background: #fff; color: #005BAC; border: 1px solid #005BAC; border-radius: 6px; padding: 9px 20px;
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: all .2s; font-family: inherit;
+        }
+        .btn-ghost:hover { background: #eef6ff; }
+
+        .ai-cfg { margin-top: 18px; padding-top: 16px; border-top: 1px dashed #d9e4ef; font-size: 13px; color: #667; }
+        .ai-cfg input { width: 100%; margin-top: 6px; padding: 9px 12px; border: 1px solid #c9d9e8; border-radius: 6px; font-size: 13px; font-family: inherit; }
+
+        .report-out { margin-top: 20px; }
+        .report-out .toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+        .report-body {
+            background: #fbfdff; border: 1px solid #e2ebf5; border-radius: 10px; padding: 22px 26px;
+            font-size: 14px; line-height: 2; color: #2c3a4b; max-height: 560px; overflow: auto; white-space: normal;
+        }
+        .report-body h2 { color: #005BAC; font-size: 20px; margin: 10px 0 6px; }
+        .report-body h3 { color: #003D79; font-size: 16px; margin: 12px 0 4px; }
+        .report-body h4 { color: #005BAC; font-size: 14px; margin: 8px 0 2px; }
+        .report-body b { color: #003D79; }
+        .report-loading { color: #005BAC; font-size: 14px; padding: 30px 0; text-align: center; }
+
+        .footer-note { text-align: center; color: #8a99a8; font-size: 12px; padding: 20px 0 30px; }
+        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .t-cards { grid-template-columns: repeat(2, 1fr); } }
+        @media print {
+            .topbar, .mode-banner, .report-btns, .ai-cfg, .toolbar, .footer-note, .panel.ctrl { display: none !important; }
+            body { background: #fff; }
+            .layout { grid-template-columns: 1fr; margin: 0; padding: 0; }
+            .panel { border: none; box-shadow: none; padding: 0; }
+            .report-body { max-height: none; overflow: visible; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-logo">CR</div>
+            <div>
+                <div class="topbar-title">教员后台 · 学情分析与报告生成</div>
+                <div class="topbar-sub">三臂凿岩台车教学交互式智能体平台</div>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <a class="topbar-btn" href="./index.html">返回平台首页</a>
+            <a class="topbar-btn solid" href="./confirm.html?role=teacher">重新进入确认书</a>
+        </div>
+    </div>
+
+    <div class="mode-banner" id="modeBanner">正在检测数据通道…</div>
+
+    <div class="layout">
+        <!-- 左：学情概览 -->
+        <div class="panel ctrl">
+            <div class="panel-title">学情概览</div>
+            <div class="t-cards" id="summaryCards"></div>
+
+            <div class="sub-h">学员列表</div>
+            <div class="scroll-wrap" id="studentTableWrap"><p class="empty-tip">加载中…</p></div>
+
+            <div class="sub-h">考核记录（最近 50 条）</div>
+            <div class="scroll-wrap" id="recordTableWrap"><p class="empty-tip">加载中…</p></div>
+        </div>
+
+        <!-- 右：报告生成 -->
+        <div>
+            <div class="panel ctrl">
+                <div class="panel-title">个性化报告生成（后台智能体即时生成）</div>
+                <div class="report-btns">
+                    <div class="rpt-item">
+                        <h4>个人学习报告</h4>
+                        <p>针对指定学员的实操与理论考核数据，自动生成个人学习评价、薄弱环节与改进建议。</p>
+                        <div class="rpt-row">
+                            <select id="personalTarget"></select>
+                            <button class="btn-primary" onclick="generateReport('personal')">生成个人学习报告</button>
+                        </div>
+                    </div>
+                    <div class="rpt-item">
+                        <h4>班级学情分析</h4>
+                        <p>按班级汇总全部学员的考核表现，输出班级整体画像与教学建议。</p>
+                        <div class="rpt-row">
+                            <select id="classTarget"></select>
+                            <button class="btn-primary" onclick="generateReport('class')">生成班级学情分析</button>
+                        </div>
+                    </div>
+                    <div class="rpt-item">
+                        <h4>平台教学质量报告</h4>
+                        <p>基于平台全部学习与考核数据，输出整体教学质量评估与优化建议。</p>
+                        <div class="rpt-row">
+                            <button class="btn-primary" onclick="generateReport('quality')">生成教学质量报告</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-cfg">
+                    静态模式 AI 通道（可选）：部署 Cloudflare Worker 代理后填入其 /chat 地址，即可在纯静态托管下用 AI 生成报告；留空则使用本地模板生成。
+                    <input type="text" id="aiProxyInput" placeholder="https://xxx.workers.dev/chat" maxlength="200">
+                </div>
+            </div>
+
+            <div class="report-out" id="reportOut" style="display:none;">
+                <div class="toolbar">
+                    <button class="btn-ghost" onclick="window.print()">打印 / 导出 PDF</button>
+                    <button class="btn-ghost" onclick="exportReport()">导出为文本</button>
+                </div>
+                <div class="report-body" id="reportBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">版权所有：三臂凿岩台车教学智能体项目组 · 开发号：20261023</div>
+
+    <script>
+        // ==================== 数据通道 ====================
+        var backendMode = null;
+        var LS_AI_PROXY = 'jumbo_ai_proxy';
+        var LS_ASSESS = 'jumbo_assessments';
+        var aiProxyUrl = localStorage.getItem(LS_AI_PROXY) || '';
+
+        // 静态演示数据（仅静态模式无本机记录时兜底，明确标注“示例”）
+        var DEMO_STUDENTS = [
+            {name:'张明', cls:'隧道工程2024-1班'}, {name:'李雪', cls:'隧道工程2024-1班'},
+            {name:'王强', cls:'隧道工程2024-1班'}, {name:'刘洋', cls:'隧道工程2024-2班'},
+            {name:'赵磊', cls:'隧道工程2024-2班'}, {name:'陈晨', cls:'隧道工程2024-2班'}
+        ];
+        function buildDemoData() {
+            var now = Date.now();
+            var dimSets = [
+                {规范度:100,精准度:80,效率:70,安全:100},
+                {规范度:80,精准度:60,效率:60,安全:80},
+                {规范度:100,精准度:100,效率:90,安全:100},
+                {规范度:60,精准度:70,效率:80,安全:60},
+                {规范度:90,精准度:80,效率:80,安全:90},
+                {规范度:70,精准度:50,效率:60,安全:70}
+            ];
+            var recs = [];
+            DEMO_STUDENTS.forEach(function(s, idx){
+                var n = 2 + (idx % 2);
+                for (var i = 0; i < n; i++) {
+                    var practical = (idx + i) % 2 === 0;
+                    var dim = practical ? dimSets[(idx*2 + i) % dimSets.length] : null;
+                    var score = practical
+                        ? Math.round((dim['规范度']+dim['精准度']+dim['效率']+dim['安全'])/4)
+                        : 60 + ((idx*7 + i*13) % 41);
+                    recs.push({
+                        name: s.name, cls: s.cls, role: 'student',
+                        type: practical ? 'practical' : 'formal',
+                        score: score,
+                        dims: dim || {理论: score},
+                        correct: practical ? (3 + (idx + i) % 4) : (5 + (idx + i) % 5),
+                        totalQ: practical ? 6 : 10,
+                        elapsed: 260 + idx*45 + i*60,
+                        ts: now - (i*6*3600*1000 + idx*24*3600*1000)
+                    });
+                }
+            });
+            return recs;
+        }
+
+        function detectBackend(cb) {
+            var t = setTimeout(function(){ backendMode = 'static'; cb('static'); }, 2500);
+            fetch('/api/health', {cache:'no-store'}).then(function(r){ return r.json(); }).then(function(j){
+                clearTimeout(t); backendMode = (j && j.ok) ? 'server' : 'static'; cb(backendMode);
+            }).catch(function(){ clearTimeout(t); backendMode = 'static'; cb('static'); });
+        }
+        function getLocalAssessments() {
+            var local = [];
+            try { local = JSON.parse(localStorage.getItem(LS_ASSESS)) || []; } catch(e){ local = []; }
+            var demo = buildDemoData();
+            // 合并本机记录与示例数据（示例数据保证静态模式可演示）
+            return local.concat(demo.map(function(x){ x._demo = true; return x; }));
+        }
+
+        var allData = { students: [], assessments: [] };
+
+        function loadData() {
+            detectBackend(function(mode){
+                var banner = document.getElementById('modeBanner');
+                if (mode === 'server') {
+                    banner.innerHTML = '数据通道：<b>服务端模式</b> —— 数据来自平台后端（learning_state.json），报告由 <b>DeepSeek 智能体</b> 即时生成。';
+                    var p1 = fetch('/api/teacher/summary', {cache:'no-store'}).then(function(r){ return r.json(); });
+                    var p2 = fetch('/api/users', {cache:'no-store'}).then(function(r){ return r.json(); });
+                    var p3 = fetch('/api/assessments', {cache:'no-store'}).then(function(r){ return r.json(); });
+                    Promise.all([p1, p2, p3]).then(function(arr){
+                        allData.students = (arr[1] && arr[1].users) || [];
+                        allData.assessments = (arr[2] && arr[2].assessments) || [];
+                        renderAll(arr[0] || {});
+                    }).catch(function(){ useLocalFallback(); });
+                } else {
+                    banner.innerHTML = '数据通道：<b>静态演示模式</b> —— 数据为本机浏览器记录与<b>示例数据</b>；运行本地 server.py 后自动切换为服务端模式（真实数据 + DeepSeek 报告）。';
+                    useLocalFallback();
+                }
+                document.getElementById('aiProxyInput').value = aiProxyUrl;
+            });
+        }
+
+        function useLocalFallback() {
+            var recs = getLocalAssessments();
+            var names = {}, nameCls = {};
+            recs.forEach(function(x){ if (x.name) { names[x.name] = 1; nameCls[x.name] = x.cls || '未分组'; } });
+            allData.students = Object.keys(names).map(function(n){ return {name:n, cls:nameCls[n]}; });
+            allData.assessments = recs;
+            var s = summarize(recs);
+            renderAll(s);
+        }
+
+        function summarize(list) {
+            var names = {};
+            list.forEach(function(x){ if (x.name) names[x.name] = 1; });
+            var practical = list.filter(function(x){ return x.type === 'practical'; });
+            var formal = list.filter(function(x){ return x.type === 'formal'; });
+            var avg = function(a){ return a.length ? Math.round(a.reduce(function(s,x){ return s + (x.score||0); }, 0) / a.length) : 0; };
+            return { totalStudents: Object.keys(names).length, totalAssess: list.length, avgScore: avg(list), practicalAvg: avg(practical), formalAvg: avg(formal), assessments: list };
+        }
+
+        function renderAll(s) {
+            document.getElementById('summaryCards').innerHTML = [
+                {k:'学员总数', v:s.totalStudents}, {k:'考核总人次', v:s.totalAssess},
+                {k:'整体平均分', v:s.avgScore}, {k:'实操平均分', v:s.practicalAvg},
+                {k:'正式考核平均分', v:s.formalAvg}, {k:'记录条数', v:(s.assessments||[]).length}
+            ].map(function(c){ return '<div class="t-card"><div class="t-num">'+c.v+'</div><div class="t-label">'+c.k+'</div></div>'; }).join('');
+
+            var st = allData.students;
+            document.getElementById('studentTableWrap').innerHTML = st.length
+                ? '<table><thead><tr><th>姓名</th><th>班级</th><th>考核次数</th><th>平均分</th></tr></thead><tbody>' + st.map(function(u){
+                    var recs = allData.assessments.filter(function(x){ return x.name === u.name; });
+                    var avg = recs.length ? Math.round(recs.reduce(function(s,x){ return s + (x.score||0); }, 0) / recs.length) : 0;
+                    return '<tr><td>'+u.name+(recs[0]&&recs[0]._demo?' <span style="color:#c0392b;">(示例)</span>':'')+'</td><td>'+(u.cls||'-')+'</td><td>'+recs.length+'</td><td>'+avg+'</td></tr>';
+                }).join('') + '</tbody></table>'
+                : '<p class="empty-tip">暂无学员数据。</p>';
+
+            var list = allData.assessments.slice().reverse().slice(0, 50);
+            document.getElementById('recordTableWrap').innerHTML = list.length
+                ? '<table><thead><tr><th>时间</th><th>姓名</th><th>班级</th><th>类型</th><th>得分</th><th>用时</th></tr></thead><tbody>' + list.map(function(x){
+                    var d = new Date(x.ts || Date.now());
+                    var ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+                    return '<tr><td>'+ds+'</td><td>'+(x.name||'-')+(x._demo?' <span style="color:#c0392b;">(示例)</span>':'')+'</td><td>'+(x.cls||'-')+'</td><td>'+(x.type==='practical'?'实操模拟':'正式')+'</td><td>'+x.score+'</td><td>'+fmtTime(x.elapsed||0)+'</td></tr>';
+                }).join('') + '</tbody></table>'
+                : '<p class="empty-tip">暂无考核记录。</p>';
+
+            // 报告目标选项
+            var selP = document.getElementById('personalTarget');
+            selP.innerHTML = st.map(function(u){ return '<option value="'+u.name+'">'+u.name+'（'+(u.cls||'未分组')+'）</option>'; }).join('');
+            var classes = [];
+            st.forEach(function(u){ if (u.cls && classes.indexOf(u.cls) < 0) classes.push(u.cls); });
+            var selC = document.getElementById('classTarget');
+            selC.innerHTML = '<option value="__all__">全部班级</option>' + classes.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+        }
+
+        function fmtTime(s){ s = Math.max(0, Math.round(s || 0)); var m = Math.floor(s/60), ss = s%60; return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss; }
+
+        // ==================== 报告生成 ====================
+        var REPORT_LABEL = { personal:'个人学习报告', class:'班级学情分析', quality:'平台教学质量报告' };
+        var CURRENT_REPORT = '';
+
+        function buildContext(type, target) {
+            var list = allData.assessments;
+            var lines = [];
+            var avg = function(a){ return a.length ? Math.round(a.reduce(function(s,x){ return s + (x.score||0); }, 0)/a.length) : 0; };
+            if (type === 'personal') {
+                var recs = list.filter(function(x){ return x.name === target; });
+                var u = allData.students.filter(function(x){ return x.name === target; })[0] || {cls:'未分组'};
+                lines.push('学员：' + target + '（班级：' + (u.cls || '未分组') + '）');
+                lines.push('考核记录共 ' + recs.length + ' 条：');
+                recs.forEach(function(x, i){
+                    lines.push((i+1) + '. ' + (x.type==='practical'?'实操模拟考核':'正式考核') + '：得分 ' + x.score + ' / 100，用时 ' + fmtTime(x.elapsed) + (x.dims ? '，各维度得分 ' + JSON.stringify(x.dims) : ''));
+                });
+                var pr = recs.filter(function(x){ return x.type === 'practical'; });
+                var fr = recs.filter(function(x){ return x.type === 'formal'; });
+                lines.push('实操平均分：' + avg(pr) + '；正式考核平均分：' + avg(fr) + '；全部平均分：' + avg(recs));
+            } else if (type === 'class') {
+                var cls = target === '__all__' ? null : target;
+                var recs = list.filter(function(x){ return !cls || x.cls === cls; });
+                var names = {};
+                recs.forEach(function(x){ if (x.name) names[x.name] = 1; });
+                var pr = recs.filter(function(x){ return x.type === 'practical'; });
+                var fr = recs.filter(function(x){ return x.type === 'formal'; });
+                lines.push('班级：' + (cls || '全部班级'));
+                lines.push('学员人数：' + Object.keys(names).length + '；考核记录：' + recs.length + ' 条');
+                lines.push('实操平均分：' + avg(pr) + '；正式考核平均分：' + avg(fr) + '；整体平均分：' + avg(recs));
+                var dimSum = {};
+                recs.forEach(function(x){
+                    if (!x.dims) return;
+                    Object.keys(x.dims).forEach(function(k){
+                        dimSum[k] = dimSum[k] || {sum:0, n:0};
+                        dimSum[k].sum += x.dims[k]; dimSum[k].n++;
+                    });
+                });
+                lines.push('各维度平均：' + Object.keys(dimSum).map(function(k){ return k + ' ' + Math.round(dimSum[k].sum/dimSum[k].n); }).join('，'));
+            } else {
+                var names = {};
+                list.forEach(function(x){ if (x.name) names[x.name] = 1; });
+                var pr = list.filter(function(x){ return x.type === 'practical'; });
+                var fr = list.filter(function(x){ return x.type === 'formal'; });
+                lines.push('平台整体数据：学员 ' + Object.keys(names).length + ' 人，考核记录 ' + list.length + ' 条');
+                lines.push('实操平均分：' + avg(pr) + '；正式考核平均分：' + avg(fr) + '；整体平均分：' + avg(list));
+                var dimSum = {};
+                list.forEach(function(x){
+                    if (!x.dims) return;
+                    Object.keys(x.dims).forEach(function(k){
+                        dimSum[k] = dimSum[k] || {sum:0, n:0};
+                        dimSum[k].sum += x.dims[k]; dimSum[k].n++;
+                    });
+                });
+                lines.push('各维度平均：' + Object.keys(dimSum).map(function(k){ return k + ' ' + Math.round(dimSum[k].sum/dimSum[k].n); }).join('，'));
+            }
+            return lines.join('\n');
+        }
+
+        function generateReport(type) {
+            var target = '';
+            if (type === 'personal') {
+                target = document.getElementById('personalTarget').value;
+                if (!target) { showTip('请先选择学员'); return; }
+            } else if (type === 'class') {
+                target = document.getElementById('classTarget').value || '__all__';
+            }
+            var out = document.getElementById('reportOut');
+            var body = document.getElementById('reportBody');
+            out.style.display = 'block';
+            body.innerHTML = '<div class="report-loading">正在生成「' + REPORT_LABEL[type] + '」…（后台智能体分析考核数据中）</div>';
+            window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+
+            detectBackend(function(mode){
+                if (mode === 'server') {
+                    fetch('/api/report', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:type, target:target}), cache:'no-store'})
+                        .then(function(r){ return r.json(); })
+                        .then(function(j){
+                            if (j && j.ok && j.reply) { CURRENT_REPORT = j.reply; body.innerHTML = renderMD(j.reply); }
+                            else { CURRENT_REPORT = ''; body.innerHTML = '<p class="empty-tip">报告生成失败：' + ((j && j.error) || '未知错误') + '</p>'; }
+                        })
+                        .catch(function(){ body.innerHTML = '<p class="empty-tip">报告服务请求失败，请确认后端服务已启动。</p>'; });
+                } else {
+                    // 静态模式：优先走云端 AI 代理，未配置则用本地模板
+                    if (aiProxyUrl) {
+                        var sys = '你是「三臂凿岩台车教学交互式智能体平台」的教务分析助手。请根据提供的平台考核数据，用中文撰写一份《' + REPORT_LABEL[type] + '》，结构清晰、客观专业，包含：总体评价、数据概览、优势与不足、改进建议。不要使用 Markdown 表格，控制在 600 字以内。';
+                        fetch(aiProxyUrl, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({messages:[{role:'system',content:sys},{role:'user',content:buildContext(type,target)}], max_tokens:2048}), cache:'no-store'})
+                            .then(function(r){ return r.json(); })
+                            .then(function(j){
+                                if (j && j.ok && j.reply) { CURRENT_REPORT = j.reply; body.innerHTML = renderMD(j.reply); }
+                                else { body.innerHTML = '<p class="empty-tip">AI 代理返回异常：' + ((j && j.error) || '未知错误') + '，可改用本地模板。</p>'; }
+                            })
+                            .catch(function(){ body.innerHTML = '<p class="empty-tip">AI 代理不可达，请在下方配置正确的代理地址，或留空使用本地模板生成。</p>'; });
+                    } else {
+                        var report = localTemplate(type, target);
+                        CURRENT_REPORT = report.text;
+                        body.innerHTML = report.html + '<p style="color:#8a99a8;font-size:12px;margin-top:14px;">（本报告由静态模式本地模板生成；配置云端 AI 代理后可升级为 AI 智能生成）</p>';
+                    }
+                }
+            });
+        }
+
+        function localTemplate(type, target) {
+            var ctx = buildContext(type, target);
+            var lines = ctx.split('\n');
+            var title = REPORT_LABEL[type];
+            var out = [];
+            out.push('# ' + title);
+            out.push('');
+            out.push('**一、总体评价**');
+            var avgLine = lines.filter(function(l){ return l.indexOf('平均') >= 0 && l.indexOf('各维度') < 0; }).join('；');
+            out.push('综合 ' + avgLine + '，学员整体学习状态' + (type==='quality' ? '良好，平台教学闭环运转正常' : '基本稳定') + '，在实操安全规范方面仍需持续强化。');
+            out.push('');
+            out.push('**二、数据概览**');
+            out.push(ctx);
+            out.push('');
+            out.push('**三、优势与不足**');
+            out.push('优势：平台学练考一体化闭环运行，三维模拟实操与 AI 助教有效支撑学习；考核数据实时记录，可支撑个性化教学。');
+            out.push('不足：部分学员在安全确认与退钻收臂环节存在扣分，规范度与安全维度有待提升。');
+            out.push('');
+            out.push('**四、改进建议**');
+            out.push('1. 针对安全类题目薄弱学员开展专项复盘讲解；');
+            out.push('2. 结合三维模拟实操强化标准化作业流程（SOP）训练；');
+            out.push('3. 持续使用 AI 智能体生成个人学习报告，实现因材施教。');
+            return { text: out.join('\n'), html: renderMD(out.join('\n')) };
+        }
+
+        function renderMD(t) {
+            var s = String(t || '');
+            s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            s = s.replace(/^### (.*)$/gm, '<h4>$1</h4>');
+            s = s.replace(/^## (.*)$/gm, '<h3>$1</h3>');
+            s = s.replace(/^# (.*)$/gm, '<h2>$1</h2>');
+            s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+            s = s.replace(/\n/g, '<br>');
+            return s;
+        }
+
+        function exportReport() {
+            if (!CURRENT_REPORT) { showTip('暂无可导出的报告'); return; }
+            var blob = new Blob(['\ufeff' + CURRENT_REPORT], {type:'text/plain;charset=utf-8'});
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '三臂凿岩台车平台报告_' + Date.now() + '.txt';
+            document.body.appendChild(a); a.click();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 300);
+        }
+
+        function showTip(msg) {
+            var d = document.createElement('div');
+            d.textContent = msg;
+            d.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 26px;border-radius:20px;font-size:14px;z-index:9999;';
+            document.body.appendChild(d);
+            setTimeout(function(){ d.remove(); }, 2200);
+        }
+
+        // AI 代理配置保存
+        document.getElementById('aiProxyInput').addEventListener('change', function(){
+            aiProxyUrl = this.value.trim();
+            try { localStorage.setItem(LS_AI_PROXY, aiProxyUrl); } catch(e){}
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

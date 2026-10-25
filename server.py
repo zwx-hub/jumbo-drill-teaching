@@ -251,6 +251,8 @@ def _default_state():
         "view_resets": 0,
         "total_time_ms": 0,
         "events": [],
+        "users": [],
+        "assessments": [],
     }
 
 
@@ -270,6 +272,111 @@ def save_state(state):
         os.replace(tmp, STATE_FILE)
     except Exception:
         pass
+
+
+# ---------------------------------------------------------------------------
+# 学练考一体化：考核统计与个性化报告生成（教员后台 / 平台考核评估）
+# ---------------------------------------------------------------------------
+def _avg(lst):
+    return round(sum(x.get("score", 0) for x in lst) / len(lst)) if lst else 0
+
+
+def _dim_avg(recs):
+    """统计各评分维度平均值，返回 {维度名: 平均分}。"""
+    agg = {}
+    for a in recs:
+        dims = a.get("dims") or {}
+        for k, v in dims.items():
+            if k not in agg:
+                agg[k] = [0, 0]
+            agg[k][0] += v
+            agg[k][1] += 1
+    return {k: round(v[0] / v[1]) for k, v in agg.items()} if agg else {}
+
+
+def teacher_summary(state):
+    """教员后台学情概览汇总数据。"""
+    assessments = state.get("assessments", [])
+    users = state.get("users", [])
+    practical = [a for a in assessments if a.get("type") == "practical"]
+    formal = [a for a in assessments if a.get("type") == "formal"]
+    return {
+        "totalStudents": len(users),
+        "totalAssess": len(assessments),
+        "avgScore": _avg(assessments),
+        "practicalAvg": _avg(practical),
+        "formalAvg": _avg(formal),
+        "assessments": assessments,
+    }
+
+
+REPORT_LABELS = {"personal": "个人学习报告", "class": "班级学情分析", "quality": "平台教学质量报告"}
+
+
+def report_context(state, rtype, target):
+    """把学员/班级/平台考核数据整理成文本上下文，供报告生成使用。"""
+    assessments = state.get("assessments", [])
+    users = state.get("users", [])
+    lines = []
+    if rtype == "personal":
+        recs = [a for a in assessments if a.get("name") == target]
+        u = next((x for x in users if x.get("name") == target), {})
+        lines.append("学员：%s（班级：%s）" % (target, u.get("cls", "未分组")))
+        lines.append("考核记录共 %d 条：" % len(recs))
+        for i, x in enumerate(recs, 1):
+            dims = x.get("dims") or {}
+            lines.append("%d. %s：得分 %s / 100，用时 %s 秒%s" % (
+                i,
+                "实操模拟考核" if x.get("type") == "practical" else "正式考核",
+                x.get("score", 0), x.get("elapsed", 0),
+                ("，各维度得分 " + json.dumps(dims, ensure_ascii=False)) if dims else ""))
+        pr = [a for a in recs if a.get("type") == "practical"]
+        fr = [a for a in recs if a.get("type") == "formal"]
+        lines.append("实操平均分：%s；正式考核平均分：%s；全部平均分：%s" % (_avg(pr), _avg(fr), _avg(recs)))
+    elif rtype == "class":
+        cls = None if target == "__all__" else target
+        recs = [a for a in assessments if cls is None or a.get("cls") == cls]
+        names = set(a.get("name") for a in recs if a.get("name"))
+        pr = [a for a in recs if a.get("type") == "practical"]
+        fr = [a for a in recs if a.get("type") == "formal"]
+        lines.append("班级：%s" % (cls or "全部班级"))
+        lines.append("学员人数：%d；考核记录：%d 条" % (len(names), len(recs)))
+        lines.append("实操平均分：%s；正式考核平均分：%s；整体平均分：%s" % (_avg(pr), _avg(fr), _avg(recs)))
+        dims = _dim_avg(recs)
+        if dims:
+            lines.append("各维度平均：" + "，".join("%s %s" % (k, v) for k, v in dims.items()))
+    else:  # quality
+        names = set(a.get("name") for a in assessments if a.get("name"))
+        pr = [a for a in assessments if a.get("type") == "practical"]
+        fr = [a for a in assessments if a.get("type") == "formal"]
+        lines.append("平台整体数据：学员 %d 人，考核记录 %d 条" % (len(names), len(assessments)))
+        lines.append("实操平均分：%s；正式考核平均分：%s；整体平均分：%s" % (_avg(pr), _avg(fr), _avg(assessments)))
+        dims = _dim_avg(assessments)
+        if dims:
+            lines.append("各维度平均：" + "，".join("%s %s" % (k, v) for k, v in dims.items()))
+    return "\n".join(lines)
+
+
+def generate_report(state, rtype, target):
+    """调用 DeepSeek 生成个性化报告，返回 (结果字典, 错误消息)。"""
+    if rtype not in REPORT_LABELS:
+        return None, "不支持的报告类型：%s" % rtype
+    ctx = report_context(state, rtype, target)
+    system = (
+        "你是「三臂凿岩台车教学交互式智能体平台」的教务分析助手。请根据提供的平台考核数据，"
+        "用中文撰写一份《%s》，结构清晰、客观专业，必须包含：总体评价、数据概览、优势与不足、"
+        "改进建议四个部分。不要使用 Markdown 表格，控制在 600 字以内。" % REPORT_LABELS[rtype]
+    )
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": "平台考核数据如下：\n" + ctx},
+    ]
+    result, err = forward_chat(messages, max_tokens=2048)
+    if err:
+        return None, err
+    if not result.get("ok"):
+        return None, result.get("error") or "报告生成失败"
+    return {"ok": True, "report": result.get("reply", ""), "type": rtype, "target": target}, None
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -340,6 +447,21 @@ class Handler(SimpleHTTPRequestHandler):
                 "events": state.get("events", [])[-200:],
             })
             return
+        if path == "/api/users":
+            with LOCK:
+                state = load_state()
+            self._json({"users": state.get("users", [])})
+            return
+        if path == "/api/assessments":
+            with LOCK:
+                state = load_state()
+            self._json({"assessments": state.get("assessments", [])})
+            return
+        if path == "/api/teacher/summary":
+            with LOCK:
+                state = load_state()
+            self._json(teacher_summary(state))
+            return
         # 根路径：优先 index.html，否则重定向到教学页面
         if path == "/" or path == "/index.html":
             idx = os.path.join(ROOT, "index.html")
@@ -381,14 +503,82 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             self._json(result)
             return
-        if path != "/api/interactions":
-            self._json({"ok": False, "error": "not found"}, 404)
-            return
         try:
             length = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
         except Exception:
             body = {}
+
+        if path == "/api/users":
+            name = str(body.get("name") or "").strip()
+            if not name:
+                self._json({"ok": False, "error": "缺少 name 参数"}, 400)
+                return
+            cls = str(body.get("cls") or "").strip() or "未分组"
+            with LOCK:
+                state = load_state()
+                users = state.setdefault("users", [])
+                found = False
+                for u in users:
+                    if u.get("name") == name:
+                        u["cls"] = cls
+                        u["ts"] = int(time.time() * 1000)
+                        found = True
+                        break
+                if not found:
+                    users.append({"name": name, "cls": cls, "ts": int(time.time() * 1000)})
+                save_state(state)
+            self._json({"ok": True})
+            return
+
+        if path == "/api/assessments":
+            atype = str(body.get("type") or "").strip()
+            if atype not in ("practical", "formal"):
+                self._json({"ok": False, "error": "type 必须为 practical 或 formal"}, 400)
+                return
+            with LOCK:
+                state = load_state()
+                assessments = state.setdefault("assessments", [])
+                assessments.append({
+                    "name": str(body.get("name") or "").strip() or "未命名",
+                    "cls": str(body.get("cls") or "").strip() or "未分组",
+                    "role": str(body.get("role") or "student"),
+                    "type": atype,
+                    "score": max(0, min(100, int(body.get("score") or 0))),
+                    "dims": body.get("dims") or {},
+                    "correct": int(body.get("correct") or 0),
+                    "totalQ": int(body.get("totalQ") or 0),
+                    "elapsed": int(body.get("elapsed") or 0),
+                    "ts": int(body.get("ts") or time.time() * 1000),
+                })
+                del assessments[:-2000]  # 仅保留最近 2000 条
+                save_state(state)
+            self._json({"ok": True})
+            return
+
+        if path == "/api/report":
+            rtype = str(body.get("type") or "").strip()
+            target = str(body.get("target") or "")
+            if rtype not in REPORT_LABELS:
+                self._json({"ok": False, "error": "type 必须为 personal / class / quality"}, 400)
+                return
+            if rtype == "personal" and not target:
+                self._json({"ok": False, "error": "缺少 target（学员姓名）"}, 400)
+                return
+            if rtype == "class" and not target:
+                target = "__all__"
+            with LOCK:
+                state = load_state()
+            result, err = generate_report(state, rtype, target)
+            if err:
+                self._json({"ok": False, "error": err}, 503)
+                return
+            self._json(result)
+            return
+
+        if path != "/api/interactions":
+            self._json({"ok": False, "error": "not found"}, 404)
+            return
         action = str(body.get("action") or "")
         part_id = str(body.get("partId") or "")
         ts = int(body.get("ts") or time.time() * 1000)

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23005BAC'/%3E%3Ctext x='32' y='43' font-size='26' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3ECR%3C/text%3E%3C/svg%3E">
+    <title>用户使用服务确认书</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: radial-gradient(circle at center, #eef2f6 0%, #dce4ec 100%);
+        }
+
+        .agreement-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 61, 121, 0.15);
+            display: flex;
+            flex-direction: column;
+            border-top: 4px solid #005BAC;
+            position: relative;
+        }
+
+        .card-header {
+            padding: 24px 32px 16px;
+            border-bottom: 1px solid #edf2f7;
+            background-color: #fafbfc;
+        }
+
+        .card-header h1 {
+            font-size: 22px;
+            color: #005BAC;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .card-header p {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .read-progress-bar {
+            height: 4px;
+            background: #e5e5e5;
+        }
+
+        .read-progress-fill {
+            height: 100%;
+            background: #005BAC;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .agreement-content {
+            padding: 24px 32px;
+            height: 420px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+            background-color: #ffffff;
+            scrollbar-width: thin;
+            scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+
+        .agreement-content::-webkit-scrollbar { width: 6px; }
+        .agreement-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+        .agreement-content::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+        .agreement-content h2 {
+            font-size: 15px;
+            color: #005BAC;
+            margin: 20px 0 8px;
+            font-weight: bold;
+        }
+
+        .agreement-content h2:first-child { margin-top: 0; }
+
+        .agreement-content p {
+            margin-bottom: 10px;
+            text-align: justify;
+            text-indent: 2em;
+        }
+
+        .agreement-content .highlight {
+            color: #e60000;
+            font-weight: bold;
+        }
+
+        /* 法律链接样式 */
+        .law-ref {
+            color: #005BAC;
+            font-weight: 500;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+
+        .law-ref:hover {
+            color: #e60000;
+            text-decoration-style: solid;
+        }
+
+        .agreement-content .confirm-declaration {
+            background-color: #f0f5fa;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 3px solid #005BAC;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #004080;
+            font-weight: 500;
+            text-indent: 0;
+        }
+
+        .card-footer {
+            padding: 20px 32px 30px;
+            border-top: 1px solid #edf2f7;
+            background-color: #fafbfc;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: none;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .card-footer.unlocked {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 3px;
+            cursor: pointer;
+            accent-color: #005BAC;
+        }
+
+        .checkbox-group input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .checkbox-label.disabled {
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .checkbox-label a {
+            color: #005BAC;
+            text-decoration: none;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .checkbox-label:not(.disabled) a {
+            pointer-events: auto;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 12px 40px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            letter-spacing: 1px;
+        }
+
+        .btn-cancel {
+            background-color: #f0f2f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .btn-confirm {
+            background-color: #005BAC;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 91, 172, 0.3);
+        }
+
+        .btn-confirm:disabled {
+            background-color: #a0b9d1;
+            cursor: not-allowed;
+            box-shadow: none;
+            color: #f0f0f0;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background-color: #333;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+
+        .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 600px) {
+            .agreement-card { border-radius: 8px; }
+            .card-header h1 { font-size: 18px; }
+            .agreement-content { padding: 20px; height: 340px; }
+            .button-group { flex-direction: column-reverse; gap: 10px; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="agreement-card" id="agreementCard">
+        
+        <div class="card-header">
+            <h1>用户使用服务确认书</h1>
+            <p>欢迎使用“三臂凿岩台车教学交互式智能体平台”。在使用本平台之前，请务必仔细阅读并充分理解本《确认书》的全部内容。</p>
+            <p id="roleBadge" style="font-size:12px;color:#005BAC;font-weight:bold;margin-top:6px;"></p>
+        </div>
+
+        <div class="read-progress-bar">
+            <div class="read-progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="agreement-content" id="agreementContent">
+            <p>您勾选“我已阅读并同意”，即表示您已完全接受本确认书的所有条款。</p>
+
+            <h2>第一条 平台性质与使用对象</h2>
+            <p>本平台为面向高校工程类专业师生及企业新员工的教学实训辅助工具，旨在通过三维可视化与智能交互技术，提供学练考一体化的虚拟仿真实操环境。用户须提供真实准确的身份信息，以便平台分配相应的教员或学员权限。</p>
+
+            <h2>第二条 平台使用规范</h2>
+            <p>严禁利用本平台进行任何违反法律法规、破坏网络安全的操作。平台内的三维模型、精品课程及智能体算法等知识产权均归项目组所有，未经授权严禁录屏、复制或用于商业用途。</p>
+
+            <h2>第三条 实操安全与免责声明</h2>
+            <p>本平台提供的模拟操作及考核评估均为虚拟环境，旨在帮助用户熟悉三臂凿岩台车的作业流程与原理。<span class="highlight">虚拟训练不能完全替代真实的现场施工作业培训。</span></p>
+            <p>依据<a href="https://flk.npc.gov.cn/detail?title=%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E5%AE%89%E5%85%A8%E7%94%9F%E4%BA%A7%E6%B3%95&id=ff8081817a66b816017a7956b7db0ad4" target="_blank" class="law-ref">《中华人民共和国安全生产法》</a>第三条确立的“安全第一、预防为主、综合治理”方针，以及该法关于生产经营单位应建立健全全员安全生产责任制的要求，用户在实际工程现场进行机械设备操作时，必须严格遵守国家及企业的各项安全操作规程。</p>
+            <p>依据<a href="https://flk.npc.gov.cn/detail?title=%E5%BB%BA%E8%AE%BE%E5%B7%A5%E7%A8%8B%E5%AE%89%E5%85%A8%E7%94%9F%E4%BA%A7%E7%AE%A1%E7%90%86%E6%9D%A1%E4%BE%8B&id=ff8080816f3cbb3c016f40ea51880ae9" target="_blank" class="law-ref">《建设工程安全生产管理条例》</a>（国务院令第393号），施工单位必须遵守安全生产法律、法规的规定，保证建设工程安全生产，依法承担建设工程安全生产责任。用户作为未来或现任的工程施工从业人员，应深刻理解并践行上述法定义务。</p>
+            <p>依据<a href="https://flk.npc.gov.cn/detail?title=%E7%94%9F%E4%BA%A7%E5%AE%89%E5%85%A8%E4%BA%8B%E6%95%85%E6%8A%A5%E5%91%8A%E5%92%8C%E8%B0%83%E6%9F%A5%E5%A4%84%E7%90%86%E6%9D%A1%E4%BE%8B&id=ff8080816f3e98bd016f41f5b268023f" target="_blank" class="law-ref">《生产安全事故报告和调查处理条例》</a>（国务院令第493号），事故报告应当及时、准确、完整，任何单位和个人对事故不得迟报、漏报、谎报或者瞒报。用户在实际作业中如遇险情或事故，应依法履行报告义务。</p>
+            <p>参照凿岩台车安全操作规程，作业前须完成通风、洒水、撬浮石、查盲炮、查支护、查设备等确认程序；凿岩作业中严禁移动机体，严禁使用台车进行与凿岩无关的操作（如吊装物品、撬顶板等）；严禁设备带病作业。因用户脱离虚拟环境后在实际操作中引发的任何安全事故，本平台及开发团队不承担相关法律责任。</p>
+
+            <h2>第四条 隐私保护与数据收集</h2>
+            <p>为提供教学辅助与考核评估服务，平台会收集您的学习记录、模拟操作时长及考核成绩等数据。上述数据将用于生成您的个人学习报告、教员端的班级学情分析以及平台整体教学质量的优化。</p>
+            <p>依据<a href="https://yngd.yn.gov.cn/html/2025/zhengcefagui_0708/3005367.html" target="_blank" class="law-ref">《中华人民共和国个人信息保护法》</a>第五条、第六条确立的合法、正当、必要和诚信原则，以及“收集个人信息应当限于实现处理目的的最小范围，不得过度收集”的规定，平台承诺不向任何第三方非法泄露您的个人隐私及学术数据。您依法享有查阅、复制、更正、删除个人信息以及撤回同意的权利，可通过平台设置或联系管理员行使上述权利。依托智能体底层架构优势，部分交互数据支持本地化处理，最大程度保障您的数据安全。</p>
+
+            <h2>第五条 智能体交互说明</h2>
+            <p>平台内置的智能助手基于人工智能模型生成回复，受限于技术发展阶段，其提供的信息可能存在偏差。智能助手的解答仅供学习参考，涉及具体工程技术参数与施工标准，请以官方教材、行业规章或指导教师的意见为准。</p>
+
+            <div class="confirm-declaration">
+                <strong>确认声明：</strong>我已仔细阅读并理解上述全部条款，包括其中引述的《中华人民共和国安全生产法》《建设工程安全生产管理条例》《生产安全事故报告和调查处理条例》《中华人民共和国个人信息保护法》及凿岩台车相关安全操作规程的核心要求。我同意遵守平台管理规定，妥善保管账号，规范使用虚拟仿真资源，并对自己的学习行为负责。
+            </div>
+        </div>
+
+        <div class="card-footer" id="cardFooter">
+            <label class="checkbox-group" id="checkboxGroup">
+                <input type="checkbox" id="agreeCheckbox" onchange="toggleButton()" disabled>
+                <span class="checkbox-label disabled" id="checkboxLabel">
+                    我已阅读并同意《用户使用服务确认书》及其中引述的法律法规，并承诺遵守上述规定。
+                </span>
+            </label>
+
+            <div class="button-group">
+                <button class="btn btn-cancel" id="cancelBtn" disabled onclick="handleCancel()">拒绝并退出</button>
+                <button class="btn btn-confirm" id="confirmBtn" disabled onclick="handleConfirm()">同意并进入平台</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">提示信息</div>
+
+    <script>
+        // ==================== 页面链接配置 ====================
+        // 平台页面地址：GitHub Pages 平台主页（同目录 index.html，本地调试同样适用）
+        var PLATFORM_PAGE = './index.html';
+        // 当前进入身份（student 学员 / teacher 教员）
+        var currentRole = new URLSearchParams(window.location.search).get('role') || '';
+
+        // 顶部身份徽标
+        (function () {
+            var badge = document.getElementById('roleBadge');
+            if (currentRole === 'student') {
+                badge.textContent = '当前进入身份：学员登录';
+            } else if (currentRole === 'teacher') {
+                badge.textContent = '当前进入身份：教员入口';
+            }
+        })();
+
+        // ==================== 权威男低音播报核心逻辑 ====================
+        const cardFooter = document.getElementById('cardFooter');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isSpeaking = false;
+        let hasInteracted = false;
+
+        const officialSpeechText = `
+            用户使用服务确认书。
+            欢迎使用，三臂凿岩台车教学交互式智能体平台。在使用本平台之前，请务必仔细阅读，并充分理解本确认书的全部内容。
+            您勾选“我已阅读并同意”，即表示您已完全接受本确认书的所有条款。
+            第一条。平台性质与使用对象。本平台为面向高校工程类专业师生，及企业新员工的教学实训辅助工具。旨在通过三维可视化，与智能交互技术，提供学练考一体化的虚拟仿真实操环境。用户须提供真实准确的身份信息。以便平台分配相应的教员，或学员权限。
+            第二条。平台使用规范。严禁利用本平台，进行任何违反法律法规，破坏网络安全的操作。平台内的三维模型，精品课程，及智能体算法等知识产权，均归项目组所有。未经授权，严禁录屏，复制，或用于商业用途。
+            第三条。实操安全与免责声明。本平台提供的模拟操作及考核评估，均为虚拟环境。旨在帮助用户，熟悉三臂凿岩台车的作业流程与原理。虚拟训练，不能完全替代真实的现场施工作业培训。
+            依据《中华人民共和国安全生产法》第三条确立的“安全第一，预防为主，综合治理”方针。以及该法关于生产经营单位，应建立健全全员安全生产责任制的要求。用户在实际工程现场进行机械设备操作时，必须严格遵守国家及企业的各项安全操作规程。
+            依据《建设工程安全生产管理条例》。施工单位必须遵守安全生产法律，法规的规定。保证建设工程安全生产，依法承担建设工程安全生产责任。用户作为未来，或现任的工程施工从业人员。应深刻理解，并践行上述法定义务。
+            依据《生产安全事故报告和调查处理条例》。事故报告应当及时，准确，完整。任何单位和个人，对事故不得迟报，漏报，谎报，或者瞒报。用户在实际作业中如遇险情或事故，应依法履行报告义务。
+            参照凿岩台车安全操作规程。作业前须完成通风，洒水，撬浮石，查盲炮，查支护，查设备等确认程序。凿岩作业中，严禁移动机体。严禁使用台车进行与凿岩无关的操作。严禁设备带病作业。因用户脱离虚拟环境后在实际操作中引发的任何安全事故，本平台及开发团队，不承担相关法律责任。
+            第四条。隐私保护与数据收集。为提供教学辅助与考核评估服务。平台会收集您的学习记录，模拟操作时长，及考核成绩等数据。上述数据将用于生成您的个人学习报告。教员端的班级学情分析，以及平台整体教学质量的优化。
+            依据《中华人民共和国个人信息保护法》确立的合法，正当，必要，和诚信原则。以及“收集个人信息应当限于实现处理目的的最小范围，不得过度收集”的规定。平台承诺，不向任何第三方，非法泄露您的个人隐私及学术数据。您依法享有查阅，复制，更正，删除个人信息，以及撤回同意的权利。
+            第五条。智能体交互说明。平台内置的智能助手，基于人工智能模型生成回复。受限于技术发展阶段，其提供的信息可能存在偏差。智能助手的解答，仅供学习参考。
+            确认声明。我已仔细阅读，并理解上述全部条款。同意遵守平台管理规定。我将妥善保管账号，规范使用虚拟仿真资源，并对自己的学习行为负责。
+        `;
+
+        function loadVoices() {
+            voices = synth.getVoices();
+        }
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+        loadVoices();
+
+        function getDeepMaleVoice() {
+            let voice = voices.find(v => v.lang.includes('zh') && (v.name.includes('Yunxi') || v.name.includes('Yunjian')));
+            if (voice) return voice;
+            voice = voices.find(v => v.lang.includes('zh') && (v.name.includes('Kangkang') || v.name.includes('Male')));
+            if (voice) return voice;
+            return voices.find(v => v.lang.includes('zh')) || null;
+        }
+
+        function startOfficialBroadcast() {
+            if (isSpeaking || hasInteracted) return;
+            hasInteracted = true; 
+
+            if (synth.paused) {
+                synth.resume();
+            }
+            synth.cancel(); 
+
+            cardFooter.classList.remove('unlocked');
+
+            const utterance = new SpeechSynthesisUtterance(officialSpeechText);
+            const officialVoice = getDeepMaleVoice();
+            if (officialVoice) utterance.voice = officialVoice;
+            
+            utterance.rate = 0.9;    
+            utterance.pitch = 0.6;   
+            utterance.volume = 1;
+
+            utterance.onstart = () => { isSpeaking = true; };
+            
+            utterance.onend = () => { 
+                isSpeaking = false; 
+                cardFooter.classList.add('unlocked'); 
+                cancelBtn.disabled = false; 
+            };
+            
+            utterance.onerror = (e) => { 
+                console.log("语音播放失败", e);
+                isSpeaking = false; 
+                cardFooter.classList.add('unlocked'); 
+                cancelBtn.disabled = false;
+            };
+
+            synth.speak(utterance);
+        }
+
+        const events = ['click', 'touchstart', 'keydown', 'mousedown'];
+        events.forEach(evt => {
+            document.addEventListener(evt, startOfficialBroadcast, { once: true });
+        });
+
+        document.getElementById('agreementContent').addEventListener('scroll', startOfficialBroadcast, { once: true });
+
+
+        // ==================== 阅读进度逻辑 ====================
+        const contentEl = document.getElementById('agreementContent');
+        const progressFill = document.getElementById('progressFill');
+        const agreeCheckbox = document.getElementById('agreeCheckbox');
+        const checkboxLabel = document.getElementById('checkboxLabel');
+        const confirmBtn = document.getElementById('confirmBtn');
+        let hasReadToBottom = false;
+        let autoJumped = false;
+
+        function updateReadProgress() {
+            const scrollTop = contentEl.scrollTop;
+            const scrollHeight = contentEl.scrollHeight;
+            const clientHeight = contentEl.clientHeight;
+            const maxScroll = scrollHeight - clientHeight;
+
+            if (maxScroll <= 0) {
+                unlockRead();
+                return;
+            }
+
+            const percent = Math.min(100, (scrollTop / maxScroll) * 100);
+            progressFill.style.width = percent + '%';
+
+            if (scrollTop + clientHeight >= scrollHeight - 5 && !hasReadToBottom) {
+                unlockRead();
+            }
+        }
+
+        function unlockRead() {
+            if (hasReadToBottom) return;
+            hasReadToBottom = true;
+            progressFill.style.width = '100%';
+            agreeCheckbox.disabled = false;
+            checkboxLabel.classList.remove('disabled');
+            autoEnterPlatform();
+        }
+
+        // 阅读进度拉到底后直接进入平台（无需再点击按钮）
+        function autoEnterPlatform() {
+            if (autoJumped) return;
+            autoJumped = true;
+            synth.cancel();
+            showToast('确认书已阅读完毕，正在进入平台...');
+            setTimeout(function () {
+                var url = PLATFORM_PAGE + (currentRole ? '?role=' + encodeURIComponent(currentRole) : '');
+                window.location.href = url;
+            }, 1200);
+        }
+
+        contentEl.addEventListener('scroll', updateReadProgress);
+
+        function toggleButton() {
+            confirmBtn.disabled = !agreeCheckbox.checked;
+        }
+
+        function handleCancel() {
+            synth.cancel();
+            showToast('您已拒绝《用户使用服务确认书》，即将退出。');
+            setTimeout(() => {
+                agreeCheckbox.checked = false;
+                confirmBtn.disabled = true;
+            }, 1500);
+        }
+
+        function handleConfirm() {
+            if (autoJumped) return;
+            autoJumped = true;
+            synth.cancel();
+            showToast('确认书已确认，正在进入平台...');
+            setTimeout(() => {
+                var url = PLATFORM_PAGE + (currentRole ? '?role=' + encodeURIComponent(currentRole) : '');
+                window.location.href = url;
+            }, 1500);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
+        }
+    </script>
+</body>
+</html>
